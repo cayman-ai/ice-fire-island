@@ -77,6 +77,14 @@ a { color: inherit; }
 .tool:hover { background: var(--sheet-2); }
 @media (max-width: 560px) { .brand .sub { display: none; } .brand .logo { font-size: 21px; } .tool { padding: 9px 12px 9px 10px; } }
 
+.wxp { position: fixed; z-index: 8; width: min(320px, calc(100vw - 24px)); background: var(--sheet); color: var(--ink); border: 1.5px solid var(--line); border-radius: 20px; padding: 14px; box-shadow: 0 14px 40px rgba(30, 20, 5, .28); display: grid; gap: 10px; }
+.wxp[hidden] { display: none; }
+.wxs { font-weight: 800; font-size: 14px; }
+.wxg { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.wxg span { font: 600 11px var(--font-mono); letter-spacing: .12em; color: var(--ink-soft); width: 38px; }
+.wxg button { border: 1.5px solid var(--line); background: transparent; border-radius: 999px; padding: 5px 12px; font-weight: 700; font-size: 13.5px; color: inherit; }
+.wxg button.on { background: var(--btn); color: var(--btn-ink); border-color: var(--btn); }
+.wxn { margin: 0; font-size: 12px; line-height: 1.5; color: var(--ink-soft); }
 @media (max-width: 899px) { body.sheet-open .tools { display: none; } }
 .q small { display: block; margin-top: 4px; font-size: 12.5px; color: var(--ink-soft); }
 .foot { position: absolute; left: 50%; bottom: max(12px, env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 3; width: max-content; max-width: calc(100% - 32px);
@@ -190,8 +198,16 @@ td .n { display: block; color: var(--ink-soft); font-size: 12.5px; line-height: 
       <button class="tool" id="bHome"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17L17 7M9 7h8v8"/></svg>全景</button>
       <button class="tool" id="bList"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M5 7h14M5 12h14M5 17h14"/></svg>清單</button>
       <button class="tool" id="bCmp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16v14H4zM4 10h16M10 5v14"/></svg>比較</button>
+      <button class="tool" id="bWx"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 18h10a4 4 0 000-8 5 5 0 00-9.6-1A4.5 4.5 0 007 18z"/></svg><span id="bWxT">天氣</span></button>
       <button class="tool" id="bTime"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 019.5 4a8 8 0 1010.5 10.5z"/></svg><span id="bTimeT">日夜</span></button>
     </div>
+  </div>
+
+  <div class="wxp" id="wxp" hidden role="dialog" aria-label="天氣與季節">
+    <div class="wxs" id="wxStatus"></div>
+    <div class="wxg"><span>天氣</span><button data-wx="auto">自動</button><button data-wx="clear">晴</button><button data-wx="overcast">陰</button><button data-wx="rain">雨</button><button data-wx="snow">雪</button><button data-wx="hail">冰雹</button></div>
+    <div class="wxg"><span>季節</span><button data-sea="auto">自動</button><button data-sea="0">春</button><button data-sea="1">夏</button><button data-sea="2">秋</button><button data-sea="3">冬</button></div>
+    <p class="wxn">「自動」依台北日期決定：季節為春 3–5 月、夏 6–8、秋 9–11、冬 12–2；天氣一天一種、同一天所有人看到相同，各月機率為依台北一般氣候的近似設定。台北平地不下雪、冰雹極罕見，要看請手動切換。</p>
   </div>
 
   <div class="foot">教育導覽，非投資建議 · 拖曳旋轉、雙指縮放、點島登陸</div>
@@ -467,7 +483,7 @@ td .n { display: block; color: var(--ink-soft); font-size: 12.5px; line-height: 
       if (!matCache[k]) {
         var o = { color: c, flatShading: true, roughness: 0.9, metalness: 0 };
         if (e) for (var p in e) o[p] = e[p];
-        matCache[k] = new THREE.MeshStandardMaterial(o);
+        matCache[k] = new THREE.MeshStandardMaterial(o); matCache[k].userData.base = c;
       }
       return matCache[k];
     }
@@ -814,39 +830,74 @@ td .n { display: block; color: var(--ink-soft); font-size: 12.5px; line-height: 
       });
     })();
 
-    /* ---- 燕子 ---- */
-    var swallows = [];
+    /* ---- 海鷗（兩隻） ---- */
+    var gulls = [];
     (function () {
-      var dark = mat(0x1f2a44), belly = mat(0xF4EFE4), red = mat(0xB8332A);
+      var white = mat(0xFFFFFF), back = mat(0xB6BEC5), beakM = mat(0xF2B705), tipM = mat(0x2b2b33);
       var wingGeo = new THREE.BufferGeometry();
-      wingGeo.setAttribute('position', new THREE.Float32BufferAttribute([0, 0, 0, -0.55, 0.05, 0.12, -0.18, 0, -0.3], 3)); wingGeo.computeVertexNormals();
-      var wingMat = new THREE.MeshStandardMaterial({ color: 0x1f2a44, flatShading: true, side: DS, roughness: 0.9 });
-      for (var i = 0; i < 7; i++) {
+      wingGeo.setAttribute('position', new THREE.Float32BufferAttribute([0, 0, 0.1, -0.2, 0, -0.35, -1.0, 0.08, -0.1], 3)); wingGeo.computeVertexNormals();
+      var wingMat = new THREE.MeshStandardMaterial({ color: 0xE9EDF0, flatShading: true, side: DS, roughness: 0.9 });
+      var tipGeo = new THREE.BufferGeometry();
+      tipGeo.setAttribute('position', new THREE.Float32BufferAttribute([-0.7, 0.06, -0.12, -1.0, 0.08, -0.1, -0.75, 0.05, -0.28], 3)); tipGeo.computeVertexNormals();
+      var tipMat = new THREE.MeshStandardMaterial({ color: 0x2b2b33, flatShading: true, side: DS, roughness: 0.9 });
+      for (var i = 0; i < 2; i++) {
         var g = new THREE.Group();
-        var body = new THREE.Mesh(Sp(0.18), dark); body.scale.set(1.9, 0.7, 0.8); g.add(body);
-        var bl = new THREE.Mesh(Sp(0.14), belly); bl.scale.set(1.5, 0.5, 0.7); bl.position.set(0.03, -0.07, 0); g.add(bl);
-        var th = new THREE.Mesh(Sp(0.05), red); th.position.set(0.3, -0.02, 0); g.add(th);
-        var hd = new THREE.Mesh(Sp(0.1), dark); hd.position.set(0.36, 0.02, 0); g.add(hd);
-        var t1 = new THREE.Mesh(Co(0.05, 0.4, 3), dark); t1.rotation.z = Math.PI / 2 + 0.2; t1.position.set(-0.5, 0, 0.05); g.add(t1);
-        var t2 = new THREE.Mesh(Co(0.05, 0.4, 3), dark); t2.rotation.z = Math.PI / 2 - 0.2; t2.position.set(-0.5, 0, -0.05); g.add(t2);
-        var wl = new THREE.Mesh(wingGeo, wingMat), wr = new THREE.Mesh(wingGeo, wingMat); wr.scale.z = -1;
-        wl.position.set(0.08, 0.04, 0.1); wl.rotation.y = -Math.PI / 2; wr.position.set(0.08, 0.04, -0.1); wr.rotation.y = -Math.PI / 2;
-        var wL = new THREE.Group(), wR = new THREE.Group(); wL.position.set(0.05, 0.04, 0.1); wR.position.set(0.05, 0.04, -0.1);
-        wl.position.set(0, 0, 0); wr.position.set(0, 0, 0); wl.rotation.set(0, 0, 0); wr.rotation.set(0, 0, 0);
-        wl.rotation.y = Math.PI / 2; wr.rotation.y = Math.PI / 2; wl.scale.x = -1; wr.scale.set(-1, 1, -1);
-        wL.add(wl); wR.add(wr); g.add(wL); g.add(wR);
-        g.scale.setScalar(1.5 + (i % 3) * 0.15); scene.add(g);
-        swallows.push({ g: g, wL: wL, wR: wR, cx: (i % 2 ? 6 : -6) + Math.sin(i) * 8, cz: Math.cos(i * 1.7) * 9, rx: 14 + (i % 4) * 4, rz: 9 + (i % 3) * 3, y: 8 + (i % 4) * 1.8, sp: (0.2 + (i % 3) * 0.05) * (i % 2 ? -1 : 1), ph: i * 1.3 });
+        var body = new THREE.Mesh(Sp(0.2), white); body.scale.set(2.0, 0.75, 0.85); g.add(body);
+        var bk = new THREE.Mesh(Sp(0.15), back); bk.scale.set(1.5, 0.4, 0.8); bk.position.set(-0.02, 0.09, 0); g.add(bk);
+        var hd = new THREE.Mesh(Sp(0.11), white); hd.position.set(0.42, 0.06, 0); g.add(hd);
+        var bkm = new THREE.Mesh(Co(0.035, 0.18, 4), beakM); bkm.rotation.z = -Math.PI / 2; bkm.position.set(0.58, 0.04, 0); g.add(bkm);
+        var tl = new THREE.Mesh(Co(0.1, 0.32, 3), white); tl.rotation.z = Math.PI / 2; tl.position.set(-0.55, 0, 0); g.add(tl);
+        var wL = new THREE.Group(), wR = new THREE.Group(); wL.position.set(0.05, 0.05, 0.1); wR.position.set(0.05, 0.05, -0.1);
+        var wl = new THREE.Mesh(wingGeo, wingMat), wr = new THREE.Mesh(wingGeo, wingMat), tl1 = new THREE.Mesh(tipGeo, tipMat), tr1 = new THREE.Mesh(tipGeo, tipMat);
+        wl.rotation.y = Math.PI / 2; tl1.rotation.y = Math.PI / 2; wr.rotation.y = Math.PI / 2; tr1.rotation.y = Math.PI / 2; wr.scale.x = -1; tr1.scale.x = -1;
+        wL.add(wl); wL.add(tl1); wR.add(wr); wR.add(tr1); g.add(wL); g.add(wR);
+        g.scale.setScalar(1.45); scene.add(g);
+        gulls.push({ g: g, wL: wL, wR: wR, cx: i ? 4 : -5, cz: i ? 6 : -4, rx: 17 + i * 5, rz: 12 + i * 3, y: 12 + i * 3, sp: (0.16 + i * 0.04) * (i ? -1 : 1), ph: i * 2.6 });
       }
     })();
     ticks.push(function (t) {
-      for (var i = 0; i < swallows.length; i++) {
-        var w = swallows[i], a = t * w.sp + w.ph, x = w.cx + Math.cos(a) * w.rx, z = w.cz + Math.sin(a * 1.3) * w.rz;
-        var nx = w.cx + Math.cos(a + 0.05 * Math.sign(w.sp)) * w.rx, nz = w.cz + Math.sin((a + 0.05 * Math.sign(w.sp)) * 1.3) * w.rz;
-        w.g.position.set(x, w.y + Math.sin(t * 0.9 + w.ph) * 1.2, z);
-        w.g.rotation.y = Math.atan2(-(nz - z), nx - x); w.g.rotation.x = Math.sin(t * 0.9 + w.ph) * 0.12;
-        var f = reduce ? 0.3 : Math.sin(t * 11 + w.ph * 3) * 0.7; w.wL.rotation.x = f; w.wR.rotation.x = -f;
+      for (var i = 0; i < gulls.length; i++) {
+        var w = gulls[i], a = t * w.sp + w.ph, x = w.cx + Math.cos(a) * w.rx, z = w.cz + Math.sin(a * 1.2) * w.rz, d = 0.05 * (w.sp > 0 ? 1 : -1);
+        var nx = w.cx + Math.cos(a + d) * w.rx, nz = w.cz + Math.sin((a + d) * 1.2) * w.rz;
+        w.g.position.set(x, w.y + Math.sin(t * 0.6 + w.ph) * 1.1, z);
+        w.g.rotation.y = Math.atan2(-(nz - z), nx - x); w.g.rotation.x = (w.sp > 0 ? 1 : -1) * 0.18 + Math.sin(t * 0.6 + w.ph) * 0.05;
+        var glide = Math.sin(t * 0.35 + w.ph) > 0.35, f = glide ? 0.12 + Math.sin(t * 1.5) * 0.04 : Math.sin(t * 5 + w.ph) * 0.55;
+        w.wL.rotation.x = f; w.wR.rotation.x = -f;
       }
+    });
+
+    /* ---- 野狗與野貓（沿島緣繞行） ---- */
+    function critter(kind) {
+      var g = new THREE.Group(), dog = kind === 'dog', c = dog ? 0xC8A06C : 0xE08A3C, dk = dog ? 0x6B4A2A : 0xB8651F, bm = mat(c), dm = mat(dk), ey = mat(0x222222);
+      var legs = [];
+      put(g, Bx(dog ? 0.55 : 0.42, dog ? 0.26 : 0.2, dog ? 0.24 : 0.18), bm, 0, dog ? 0.34 : 0.28, 0);
+      put(g, Bx(dog ? 0.22 : 0.18, dog ? 0.2 : 0.16, dog ? 0.2 : 0.17), bm, dog ? 0.36 : 0.28, dog ? 0.47 : 0.38, 0);
+      put(g, Bx(0.14, 0.1, 0.14), dog ? dm : mat(0xF4E6D0), dog ? 0.5 : 0.38, dog ? 0.43 : 0.35, 0);
+      put(g, Sp(0.025), mat(0x111111), dog ? 0.58 : 0.45, dog ? 0.45 : 0.37, 0);
+      put(g, Sp(0.02), ey, dog ? 0.45 : 0.36, dog ? 0.5 : 0.41, 0.07); put(g, Sp(0.02), ey, dog ? 0.45 : 0.36, dog ? 0.5 : 0.41, -0.07);
+      if (dog) { put(g, Bx(0.06, 0.13, 0.06), dm, 0.33, 0.6, 0.09, 0, 0, 0.2); put(g, Bx(0.06, 0.13, 0.06), dm, 0.33, 0.6, -0.09, 0, 0, 0.2); put(g, Bx(0.3, 0.12, 0.25), dm, -0.05, 0.42, 0); }
+      else { put(g, Co(0.05, 0.11, 3), bm, 0.27, 0.5, 0.06); put(g, Co(0.05, 0.11, 3), bm, 0.27, 0.5, -0.06); for (var s = 0; s < 3; s++) put(g, Bx(0.04, 0.02, 0.19), dm, -0.1 + s * 0.1, 0.39, 0); }
+      var tail = put(g, Cy(0.025, 0.02, dog ? 0.32 : 0.42, 5), dog ? bm : dm, dog ? -0.3 : -0.27, dog ? 0.46 : 0.4, 0, 0, 0, dog ? 0.9 : 1.2);
+      [[0.2, 0.09], [0.2, -0.09], [-0.2, 0.09], [-0.2, -0.09]].forEach(function (p) { var lg = new THREE.Group(); lg.position.set(p[0] * (dog ? 1 : 0.8), dog ? 0.22 : 0.18, p[1] * (dog ? 1 : 0.8)); g.add(lg); put(lg, Bx(0.07, dog ? 0.22 : 0.18, 0.07), bm, 0, dog ? -0.11 : -0.09, 0); legs.push(lg); });
+      g.scale.setScalar(dog ? 1.7 : 1.6); g.userData.legs = legs; g.userData.tail = tail; return g;
+    }
+    [['dog', 'property', 0.9], ['cat', 'stock', 0.7]].forEach(function (d, idx) {
+      var isl = islands[d[1]], R = isl.a.R, an = critter(d[0]); isl.g.add(an);
+      var st = { ang: idx * 2.2, r: R * 0.66, tang: idx * 2.2 + 1, tr: R * 0.66, wait: 1 + idx, v: d[2], ph: 0 };
+      ticks.push(function (t, dt) {
+        var moving = false;
+        if (st.wait > 0) st.wait -= dt;
+        else {
+          var da = st.tang - st.ang; while (da > Math.PI) da -= 2 * Math.PI; while (da < -Math.PI) da += 2 * Math.PI;
+          if (Math.abs(da) < 0.05) { st.wait = 1.5 + Math.random() * 4; st.tang = st.ang + (Math.random() < 0.5 ? -1 : 1) * (0.6 + Math.random() * 2.2); st.tr = R * (0.6 + Math.random() * 0.2); }
+          else { moving = true; var step = Math.min(Math.abs(da), st.v * dt / st.r) * (da > 0 ? 1 : -1); st.ang += step; st.r += (st.tr - st.r) * Math.min(1, dt * 1.5); st.dir = da > 0 ? 1 : -1; }
+        }
+        var x = Math.cos(st.ang) * st.r, z = Math.sin(st.ang) * st.r; an.position.set(x, TOP, z);
+        if (moving) an.rotation.y = Math.atan2(-(Math.cos(st.ang) * st.dir), -Math.sin(st.ang) * st.dir) * 1 + 0;
+        st.ph += moving ? dt * 9 : 0;
+        an.userData.legs.forEach(function (lg, i) { lg.rotation.z = moving ? Math.sin(st.ph + (i % 2 ? Math.PI : 0) + (i > 1 ? Math.PI / 2 : 0)) * 0.6 : 0; });
+        an.userData.tail.rotation.x = Math.sin(t * (d[0] === 'dog' ? 8 : 1.5) + idx) * (d[0] === 'dog' ? 0.5 : 0.25);
+      });
     });
 
     /* ---- 海面 ---- */
@@ -901,14 +952,14 @@ td .n { display: block; color: var(--ink-soft); font-size: 12.5px; line-height: 
     starGeo.setAttribute('position', new THREE.Float32BufferAttribute(sp, 3));
     var stars = new THREE.Points(starGeo, new THREE.PointsMaterial({ color: 0xffffff, size: 1.6, sizeAttenuation: false, fog: false })); stars.visible = false; scene.add(stars);
 
-    /* ---- 日夜 ---- */
+    /* ---- 日夜與環境（季節 × 天氣） ---- */
     var night = false;
+    var nb = { hI: 0.55, hC: 0xffffff, hG: 0x7fc6b8, sI: 0.6, sC: 0xfff1d6, w: 0x4B9E9A, f: 0xE9EEE6 };
     function applyNight(n) {
       night = n;
-      hemi.intensity = n ? 0.3 : 0.55; hemi.color.setHex(n ? 0x6f87c9 : 0xffffff); hemi.groundColor.setHex(n ? 0x1a3550 : 0x7fc6b8);
-      sun.intensity = n ? 0.22 : 0.6; sun.color.setHex(n ? 0x9fb4ff : 0xfff1d6);
-      waterMat.color.setHex(n ? 0x0B3B4A : 0x4B9E9A);
-      scene.fog.color.setHex(n ? 0x17324A : 0xE9EEE6);
+      nb.hI = n ? 0.3 : 0.55; nb.hC = n ? 0x6f87c9 : 0xffffff; nb.hG = n ? 0x1a3550 : 0x7fc6b8;
+      nb.sI = n ? 0.22 : 0.6; nb.sC = n ? 0x9fb4ff : 0xfff1d6;
+      nb.w = n ? 0x0B3B4A : 0x4B9E9A; nb.f = n ? 0x17324A : 0xE9EEE6;
       stars.visible = n;
       lampMats.forEach(function (m) { m.emissiveIntensity = n ? 1.7 : 0; });
       nightLights.forEach(function (l) { l.intensity = n ? 1.8 : 0.9; });
@@ -918,6 +969,166 @@ td .n { display: block; color: var(--ink-soft); font-size: 12.5px; line-height: 
     applyNight(isNight());
     try { new MutationObserver(function () { applyNight(isNight()); }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] }); } catch (e) {}
     try { matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function () { applyNight(isNight()); }); } catch (e) {}
+
+    var SEA_ZH = ['春', '夏', '秋', '冬'];
+    var WX_ZH = { clear: '晴天', overcast: '陰天', rain: '雨天', snow: '下雪', hail: '冰雹' };
+    var SMAP = {};
+    SMAP[0x9DC088] = [0xA8D68A, 0x86B966, 0xC4B46C, 0xB5BCA0];
+    SMAP[0x6DBA6A] = [0x82CC7A, 0x5BA85A, 0xD98A3A, 0x8A9A78];
+    SMAP[0xE9A3B5] = [0xFFB3C7, 0xF2D14A, 0xE0643A, 0xF4E4EA];
+    SMAP[0x2F6B4A] = [0x3A7A55, 0x2F6B4A, 0x4C6E3A, 0x2C5A48];
+    SMAP[0x3E8460] = [0x55A070, 0x3E8460, 0x65833F, 0x39705B];
+    SMAP[0x4F9A4A] = [0x5FAE55, 0x4F9A4A, 0x7A9A45, 0x6E8F52];
+    SMAP[0x5DAA55] = [0x6FBE62, 0x5DAA55, 0x8CA84C, 0x7A9A5E];
+    SMAP[0x6FAE5B] = [0x80C068, 0x6FAE5B, 0x94AC52, 0x849E66];
+    SMAP[0x84BE6A] = [0x94CE78, 0x84BE6A, 0xA4B85A, 0x92AA74];
+    var HILLB = [0xA9B8B0, 0x9DB0A8, 0xB4C2B6, 0x8FA39A, 0xC0CCC0];
+    var SEA_TINT = [[0xB9D0B0, 0.35], [0x8FB09A, 0.25], [0xC9B58E, 0.4], [0xDDE4EA, 0.45]];
+    var SEA_WATER = [0x4FA3A0, 0x3FA0A8, 0x4B9696, 0x4F8E96];
+    var SEA_SUN = [[0xfff1d6, 0.95], [0xfff3d0, 1.1], [0xffe2b8, 0.9], [0xe8f0ff, 0.8]];
+    var WXT = {
+      clear:    { hd: 1,    sd: 1,    fm: 0,    fc: 0xBFC8CC, fn: 60, ff: 175, co: 0,    cc: 0xFFFFFF, amp: 1,   cov: 0 },
+      overcast: { hd: 0.78, sd: 0.5,  fm: 0.55, fc: 0xB9C0C4, fn: 42, ff: 145, co: 0.85, cc: 0xC8CDD2, amp: 1.1, cov: 0 },
+      rain:     { hd: 0.65, sd: 0.3,  fm: 0.75, fc: 0x9AA3AA, fn: 30, ff: 120, co: 0.95, cc: 0x9AA2AA, amp: 1.7, cov: 0 },
+      snow:     { hd: 0.85, sd: 0.5,  fm: 0.7,  fc: 0xE6EEF2, fn: 32, ff: 125, co: 0.9,  cc: 0xE4E9EE, amp: 0.8, cov: 1 },
+      hail:     { hd: 0.55, sd: 0.25, fm: 0.8,  fc: 0x7E8892, fn: 28, ff: 110, co: 1,    cc: 0x7A828C, amp: 2.1, cov: 0 }
+    };
+    /* 台北時令：以台北日期為準；自動天氣「一天一種」，同一天所有人看到相同天氣。
+       各月機率為依台北一般氣候特性（冬季多陰雨、春季多雨、夏季午後雷陣雨、秋季較晴朗）的近似設定，並非氣象署逐日資料。 */
+    var WX_M = [
+      [0.20, 0.38, 0.42, 0], [0.18, 0.36, 0.46, 0], [0.22, 0.34, 0.44, 0], [0.27, 0.29, 0.43, 0.01],
+      [0.30, 0.24, 0.45, 0.01], [0.38, 0.19, 0.42, 0.01], [0.62, 0.11, 0.26, 0.01], [0.52, 0.13, 0.34, 0.01],
+      [0.50, 0.16, 0.34, 0], [0.50, 0.20, 0.30, 0], [0.45, 0.25, 0.30, 0], [0.30, 0.33, 0.37, 0]
+    ];
+    function tpeParts() {
+      try { var f = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Taipei', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date()).split('-'); return { y: +f[0], m: +f[1], d: +f[2] }; }
+      catch (e) { var n = new Date(); return { y: n.getFullYear(), m: n.getMonth() + 1, d: n.getDate() }; }
+    }
+    function realSeason() { var m = tpeParts().m; return m >= 3 && m <= 5 ? 0 : m >= 6 && m <= 8 ? 1 : m >= 9 && m <= 11 ? 2 : 3; }
+    function dayKey() { var t = tpeParts(); return t.y * 10000 + t.m * 100 + t.d; }
+    function dayRand(k) { var x = Math.sin(k * 12.9898 + 78.233) * 43758.5453; return x - Math.floor(x); }
+    function dayWx() {
+      var t = tpeParts(), w = WX_M[t.m - 1], r = dayRand(dayKey()), names = ['clear', 'overcast', 'rain', 'hail'];
+      for (var i = 0; i < 4; i++) { r -= w[i]; if (r <= 0) return names[i]; }
+      return 'clear';
+    }
+    var envS = { seaMode: 'auto', wxMode: 'auto', season: realSeason(), wx: 'clear', autoT: 0, day: dayKey() };
+    try { var sv = localStorage.getItem('gi-season'), wv2 = localStorage.getItem('gi-wx'); if (sv) envS.seaMode = sv; if (wv2) envS.wxMode = wv2; } catch (e) {}
+    function resolveEnv(first) {
+      envS.season = /^[0-3]$/.test(envS.seaMode) ? +envS.seaMode : realSeason();
+      if (WXT[envS.wxMode]) envS.wx = envS.wxMode; else { envS.wx = dayWx(); envS.day = dayKey(); }
+      recolor(); updateStatus();
+    }
+    var cur = { hd: 1, sd: 1, fm: 0, fn: 60, ff: 175, co: 0, amp: 1, cov: 0, flash: 0, cc: new THREE.Color(0xffffff), fc: new THREE.Color(0xBFC8CC) };
+    var tmpC = new THREE.Color(), tmpC2 = new THREE.Color(), SNOW = new THREE.Color(0xF2F6F8), lastSea = -1, lastCov = -1;
+    function tintHex(b, t) { return tmpC2.setHex(b).lerp(tmpC.setHex(t[0]), t[1]).getHex(); }
+    function seasonCol(b, s) { var arr = SMAP[b]; if (arr) return arr[s]; if (HILLB.indexOf(b) >= 0) return tintHex(b, SEA_TINT[s]); return null; }
+    function recolor() {
+      var s = envS.season, cov = cur.cov;
+      function paint(m, b) {
+        var col = seasonCol(b, s); if (col == null) return;
+        tmpC.setHex(col);
+        if (cov > 0.01) tmpC.lerp(SNOW, cov * (b === 0x9DC088 ? 0.92 : HILLB.indexOf(b) >= 0 ? 0.72 : 0.4));
+        m.color.copy(tmpC);
+      }
+      for (var key in matCache) { var m = matCache[key], b = m.userData.base; if (b != null) paint(m, b); }
+      paint(tIM.material, 0x2F6B4A);
+      lastSea = s; lastCov = cov;
+    }
+
+    /* 天氣雲層（只浮在外圍，不擋島） */
+    var wxCloudMat = new THREE.MeshStandardMaterial({ color: 0xffffff, flatShading: true, roughness: 1, transparent: true, opacity: 0, depthWrite: false, emissive: 0xffffff, emissiveIntensity: 0.18 });
+    var wxClouds = [];
+    for (var wc = 0; wc < 12; wc++) {
+      var wg2 = new THREE.Group(), ang0 = wc / 12 * Math.PI * 2, rad0 = 22 + (wc % 3) * 6;
+      [[0, 0, 0, 3.2], [3.2, -0.4, 0.5, 2.4], [-3.1, -0.5, 0, 2.3], [0.8, 0.9, 0.6, 2.2]].forEach(function (b) { var m = new THREE.Mesh(Ic(b[3], 1), wxCloudMat); m.position.set(b[0], b[1], b[2]); m.scale.y = 0.55; wg2.add(m); });
+      wg2.position.y = 14 + (wc % 2) * 2; scene.add(wg2); wxClouds.push({ g: wg2, a: ang0, r: rad0, sp: 0.012 + (wc % 4) * 0.004 });
+    }
+    wxCloudMat.visible = false;
+
+    /* 粒子：雨、雪、冰雹、季節飄落物 */
+    var BOX = 34, HH = 26;
+    function seedArr(n, ymax) { var a = new Float32Array(n * 3); for (var i = 0; i < n; i++) { a[i * 3] = (Math.random() * 2 - 1) * BOX; a[i * 3 + 1] = Math.random() * ymax; a[i * 3 + 2] = (Math.random() * 2 - 1) * BOX; } return a; }
+    function mkPts(n, size, color, ymax) {
+      var arr = seedArr(n, ymax), geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(arr), 3));
+      var mt = new THREE.PointsMaterial({ color: color, size: size, sizeAttenuation: false, transparent: true, opacity: 0, depthWrite: false, fog: false });
+      var p = new THREE.Points(geo, mt); p.frustumCulled = false; p.visible = false; scene.add(p); return { p: p, arr: arr, n: n, m: mt, a: 0 };
+    }
+    var snowP = mkPts(1100, 5.2, 0xffffff, HH), hailP = mkPts(520, 3.2, 0xD7E6F0, HH), ambP = mkPts(130, 4.2, 0xFFC2D4, HH);
+    var rainN = 1100, rainArr = seedArr(rainN, HH), rainGeo = new THREE.BufferGeometry(); rainGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(rainN * 6), 3));
+    var rainM = new THREE.LineBasicMaterial({ color: 0xCFE3F2, transparent: true, opacity: 0, depthWrite: false, fog: false });
+    var rainL = new THREE.LineSegments(rainGeo, rainM); rainL.frustumCulled = false; rainL.visible = false; scene.add(rainL); var rainA = 0;
+    function wrap(arr, i, dy, dx, dz, ymax) {
+      var o = i * 3; arr[o] += dx; arr[o + 1] -= dy; arr[o + 2] += dz;
+      if (arr[o + 1] < 0) { arr[o + 1] += ymax; arr[o] = (Math.random() * 2 - 1) * BOX; arr[o + 2] = (Math.random() * 2 - 1) * BOX; }
+      if (arr[o] > BOX) arr[o] -= 2 * BOX; if (arr[o] < -BOX) arr[o] += 2 * BOX; if (arr[o + 2] > BOX) arr[o + 2] -= 2 * BOX; if (arr[o + 2] < -BOX) arr[o + 2] += 2 * BOX;
+    }
+    function fadeP(P, on, dt) { P.a += ((on ? 1 : 0) - P.a) * (1 - Math.exp(-dt * 1.6)); P.p.visible = P.a > 0.02; return P.a; }
+    var ambMode = '';
+    function updateEnv(dt, t) {
+      var tg = WXT[envS.wx], k = 1 - Math.exp(-dt * 1.2), s = envS.season;
+      ['hd', 'sd', 'fm', 'fn', 'ff', 'co', 'amp'].forEach(function (p) { cur[p] += (tg[p] - cur[p]) * k; });
+      cur.cov += (tg.cov - cur.cov) * (1 - Math.exp(-dt * 0.5));
+      cur.cc.lerp(tmpC.setHex(tg.cc), k); cur.fc.lerp(tmpC.setHex(tg.fc), k);
+      cur.flash = Math.max(0, cur.flash - dt * 3.2);
+      if (envS.wx === 'hail' && Math.random() < dt * 0.35) cur.flash = 1;
+      else if (envS.wx === 'rain' && s === 1 && Math.random() < dt * 0.05) cur.flash = 0.8;
+      if (s !== lastSea || Math.abs(cur.cov - lastCov) > 0.015) recolor();
+      hemi.intensity = nb.hI * cur.hd + cur.flash * 1.3; hemi.color.setHex(nb.hC); hemi.groundColor.setHex(nb.hG);
+      sun.intensity = nb.sI * (night ? 1 : SEA_SUN[s][1]) * cur.sd; sun.color.setHex(night ? nb.sC : SEA_SUN[s][0]);
+      var wgrey = night ? 0x1c3038 : 0x6E8F98;
+      waterMat.color.setHex(night ? nb.w : SEA_WATER[s]).lerp(tmpC.setHex(wgrey), cur.fm * 0.55);
+      scene.fog.color.setHex(nb.f).lerp(tmpC.copy(cur.fc).multiplyScalar(night ? 0.3 : 1), cur.fm).lerp(tmpC.setHex(0xffffff), cur.flash * 0.5);
+      scene.fog.near = cur.fn; scene.fog.far = cur.ff;
+      wxCloudMat.visible = cur.co > 0.02; wxCloudMat.opacity = cur.co; wxCloudMat.color.copy(cur.cc).multiplyScalar(night ? 0.35 : 1);
+      if (reduce) { snowP.p.visible = hailP.p.visible = ambP.p.visible = rainL.visible = false; return; }
+      for (var i = 0; i < wxClouds.length; i++) { var w = wxClouds[i]; w.a += w.sp * dt; w.g.position.x = Math.cos(w.a) * w.r; w.g.position.z = Math.sin(w.a) * w.r * 0.85; }
+      var cx = cam.fx, cz = cam.fz;
+      rainA = fadeP({ p: rainL, a: rainA, m: rainM }, envS.wx === 'rain', dt); rainM.opacity = rainA * 0.8;
+      if (rainL.visible) {
+        rainL.position.set(cx, 0, cz); var rp = rainGeo.attributes.position.array;
+        for (var r = 0; r < rainN; r++) { wrap(rainArr, r, 34 * dt, 4 * dt, 0, HH); var o = r * 3, q = r * 6; rp[q] = rainArr[o]; rp[q + 1] = rainArr[o + 1]; rp[q + 2] = rainArr[o + 2]; rp[q + 3] = rainArr[o] + 0.35; rp[q + 4] = rainArr[o + 1] + 1.9; rp[q + 5] = rainArr[o + 2]; }
+        rainGeo.attributes.position.needsUpdate = true;
+      }
+      var sa = fadeP(snowP, envS.wx === 'snow', dt); snowP.m.opacity = sa * 0.95;
+      if (snowP.p.visible) { snowP.p.position.set(cx, 0, cz); for (var n = 0; n < snowP.n; n++) wrap(snowP.arr, n, (1.8 + (n % 5) * 0.3) * dt, Math.sin(t * 0.8 + n) * 0.5 * dt, Math.cos(t * 0.6 + n * 1.7) * 0.4 * dt, HH); snowP.p.geometry.attributes.position.array.set(snowP.arr); snowP.p.geometry.attributes.position.needsUpdate = true; }
+      var ha = fadeP(hailP, envS.wx === 'hail', dt); hailP.m.opacity = ha;
+      if (hailP.p.visible) { hailP.p.position.set(cx, 0, cz); for (var h = 0; h < hailP.n; h++) wrap(hailP.arr, h, 26 * dt, 4 * dt, 0, HH); hailP.p.geometry.attributes.position.array.set(hailP.arr); hailP.p.geometry.attributes.position.needsUpdate = true; }
+      var amode = envS.wx === 'clear' || envS.wx === 'overcast' ? (s === 0 ? 'petal' : s === 2 ? 'leaf' : s === 1 && night ? 'fly' : '') : '';
+      if (amode && amode !== ambMode) { ambMode = amode; ambP.m.color.setHex(amode === 'petal' ? 0xFFC2D4 : amode === 'leaf' ? 0xE8833A : 0xFFE27A); ambP.m.size = amode === 'fly' ? 3.4 : 4.4; }
+      var aa = fadeP(ambP, !!amode, dt); ambP.m.opacity = aa * (ambMode === 'fly' ? 0.55 + Math.sin(t * 3) * 0.35 : 0.9);
+      if (ambP.p.visible) {
+        ambP.p.position.set(cx, 0, cz);
+        for (var b = 0; b < ambP.n; b++) {
+          if (ambMode === 'fly') { var o2 = b * 3; ambP.arr[o2] += Math.sin(t * 0.7 + b) * 0.8 * dt; ambP.arr[o2 + 2] += Math.cos(t * 0.5 + b * 2) * 0.8 * dt; ambP.arr[o2 + 1] = 1 + (b % 7) * 0.5 + Math.sin(t * 0.9 + b) * 0.5; }
+          else wrap(ambP.arr, b, (0.7 + (b % 4) * 0.2) * dt, Math.sin(t * 0.5 + b) * 1.1 * dt, Math.cos(t * 0.4 + b) * 0.6 * dt, HH);
+        }
+        ambP.p.geometry.attributes.position.array.set(ambP.arr); ambP.p.geometry.attributes.position.needsUpdate = true;
+      }
+    }
+
+    /* 天氣面板 */
+    function updateStatus() {
+      var el = $('#bWxT'); if (el) el.textContent = SEA_ZH[envS.season] + '・' + WX_ZH[envS.wx];
+      var st = $('#wxStatus'); if (st) st.textContent = '現在：' + SEA_ZH[envS.season] + '季・' + WX_ZH[envS.wx] + (envS.wxMode === 'auto' ? '（自動：依台北日期，一天一種）' : '（手動）');
+      document.querySelectorAll('#wxp [data-wx]').forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-wx') === envS.wxMode); });
+      document.querySelectorAll('#wxp [data-sea]').forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-sea') === envS.seaMode); });
+    }
+    (function () {
+      var panel = $('#wxp'), btn = $('#bWx');
+      function place2() { var r = btn.getBoundingClientRect(); panel.style.top = Math.round(r.bottom + 8) + 'px'; panel.style.right = Math.max(12, Math.round(window.innerWidth - r.right)) + 'px'; }
+      btn.addEventListener('click', function (e) { e.stopPropagation(); panel.hidden = !panel.hidden; if (!panel.hidden) place2(); });
+      document.addEventListener('click', function (e) { if (!panel.hidden && !panel.contains(e.target)) panel.hidden = true; });
+      panel.addEventListener('click', function (e) {
+        var b = e.target.closest('button'); if (!b) return;
+        if (b.hasAttribute('data-wx')) { envS.wxMode = b.getAttribute('data-wx'); try { localStorage.setItem('gi-wx', envS.wxMode); } catch (x) {} }
+        if (b.hasAttribute('data-sea')) { envS.seaMode = b.getAttribute('data-sea'); try { localStorage.setItem('gi-season', envS.seaMode); } catch (x) {} }
+        resolveEnv();
+      });
+    })();
+    resolveEnv();
+    cur.hd = WXT[envS.wx].hd; cur.sd = WXT[envS.wx].sd; cur.fm = WXT[envS.wx].fm; cur.fn = WXT[envS.wx].fn; cur.ff = WXT[envS.wx].ff; cur.co = WXT[envS.wx].co; cur.amp = WXT[envS.wx].amp; cur.cov = WXT[envS.wx].cov; cur.cc.setHex(WXT[envS.wx].cc); cur.fc.setHex(WXT[envS.wx].fc); recolor();
+    ticks.push(function (t, dt) { envS.autoT -= dt; if (envS.autoT <= 0) { envS.autoT = 60; if ((envS.wxMode === 'auto' || envS.seaMode === 'auto') && dayKey() !== envS.day) { envS.day = dayKey(); resolveEnv(); } } });
 
     /* ---- 鏡頭 ---- */
     var stage = $('#stage'), W = 1, H = 1, portrait = false;
@@ -1021,7 +1232,7 @@ td .n { display: block; color: var(--ink-soft); font-size: 12.5px; line-height: 
         wacc += dt;
         if (wacc > 0.033) {
           wacc = 0;
-          for (var i = 0; i < wp.count; i++) { var x = wbx[i], z = wbz[i]; wp.setY(i, Math.sin(x * 0.25 + t * 1.1) * 0.09 + Math.cos(z * 0.3 + t * 0.9) * 0.09 + Math.sin((x + z) * 0.12 + t * 0.6) * 0.07); }
+          for (var i = 0; i < wp.count; i++) { var x = wbx[i], z = wbz[i]; wp.setY(i, (Math.sin(x * 0.25 + t * 1.1) * 0.09 + Math.cos(z * 0.3 + t * 0.9) * 0.09 + Math.sin((x + z) * 0.12 + t * 0.6) * 0.07) * cur.amp); }
           wp.needsUpdate = true;
         }
         for (var f = 0; f < foams.length; f++) { var s2 = 1 + Math.sin(t * 1.5 + f) * 0.025; foams[f].scale.set(s2, s2, 1); }
@@ -1042,6 +1253,7 @@ td .n { display: block; color: var(--ink-soft); font-size: 12.5px; line-height: 
         var sc = on ? 0.95 : 0.62; ro.ship.scale.setScalar(ro.ship.scale.x + (sc - ro.ship.scale.x) * 0.15);
         for (var d = 0; d < ro.dots.length; d++) { ro.dots[d].material = on ? dotOn : dotOff; var ds = on ? 1.25 : 0.8; ro.dots[d].scale.setScalar(ds); }
       }
+      updateEnv(dt, t);
       renderer.render(scene, camera);
       updateLabels();
       if (first) { first = false; $('#loading').classList.add('gone'); }
