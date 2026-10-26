@@ -789,6 +789,31 @@ td .n { display: block; color: var(--ink-soft); font-size: 12.5px; line-height: 
       routes.push({ a: l[0], b: l[1], curve: curve, dots: dots, ship: sh, off: i * 0.19, sp: 0.022 + (i % 3) * 0.004 });
     });
 
+    /* ---- 隨洋流漂行的帆船（隨機航點，繞開島嶼） ---- */
+    (function () {
+      var drift = ship(1.25); scene.add(drift);
+      var st = { x: -20, z: 20, h: 0, tx: -20, tz: 20, sp: 0 };
+      function free(x, z, m) { for (var i = 0; i < ASSETS.length; i++) { var a = ASSETS[i], dx = x - a.pos[0], dz = z - a.pos[1]; if (Math.sqrt(dx * dx + dz * dz) < a.R * 1.5 + (m || 2.2)) return false; } return true; }
+      function pick() { for (var n = 0; n < 40; n++) { var x = -30 + Math.random() * 60, z = -24 + Math.random() * 52; if (free(x, z, 3)) { st.tx = x; st.tz = z; return; } } }
+      var tag = document.createElement('div'); tag.className = 'lab'; tag.style.cssText = 'pointer-events:none;font-size:12px;padding:3px 9px'; tag.textContent = '洋流號'; $('#labels').appendChild(tag);
+      var tp = new V3(); ticks.push(function () { tp.set(st.x, 2.6, st.z); place(tag, tp, mode !== 'home'); });
+      pick(); drift.position.set(st.x, 0.05, st.z);
+      ticks.push(function (t, dt) {
+        dt = Math.min(dt || 0.016, 0.05);
+        var dx = st.tx - st.x, dz = st.tz - st.z, d = Math.sqrt(dx * dx + dz * dz);
+        if (d < 1.5) { pick(); dx = st.tx - st.x; dz = st.tz - st.z; d = Math.sqrt(dx * dx + dz * dz) || 1; }
+        var want = Math.atan2(dz, dx), diff = want - st.h;
+        while (diff > Math.PI) diff -= Math.PI * 2; while (diff < -Math.PI) diff += Math.PI * 2;
+        st.h += Math.max(-0.5 * dt, Math.min(0.5 * dt, diff));
+        var sp = reduce ? 0 : 2.0, vx = Math.cos(st.h) * sp, vz = Math.sin(st.h) * sp;
+        for (var i = 0; i < ASSETS.length; i++) { var a = ASSETS[i], ox = st.x - a.pos[0], oz = st.z - a.pos[1], od = Math.sqrt(ox * ox + oz * oz), lim = a.R * 1.5 + 1.2; if (od < lim && od > 0.01) { vx += ox / od * 2.2 * (lim - od); vz += oz / od * 2.2 * (lim - od); } }
+        st.x += vx * dt; st.z += vz * dt;
+        if (!free(st.x, st.z, 0.4)) pick();
+        drift.position.set(st.x, 0.05 + Math.sin(t * 1.3) * 0.07, st.z);
+        drift.rotation.y = Math.atan2(-vz, vx); drift.rotation.z = Math.sin(t * 1.1) * 0.05;
+      });
+    })();
+
     /* ---- 海面 ---- */
     var wg = new THREE.PlaneGeometry(300, 300, 70, 70); wg.rotateX(-Math.PI / 2);
     var wp = wg.attributes.position, wbx = [], wbz = [];
