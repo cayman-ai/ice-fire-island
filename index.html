@@ -900,6 +900,44 @@ td .n { display: block; color: var(--ink-soft); font-size: 12.5px; line-height: 
       });
     });
 
+    /* ---- 島與島之間的橋（黃金島為樞紐用石板橋，外圍用木橋） ---- */
+    (function () {
+      var BR = [['gold', 'bond'], ['gold', 'stock'], ['gold', 'options'], ['gold', 'futures'], ['gold', 'crypto'], ['gold', 'property'], ['bond', 'stock'], ['bond', 'property'], ['options', 'futures']];
+      var stoneM = mat(0xD3CDBD), stoneD = mat(0xA9A392), redM = mat(0xB8332A), pl1 = mat(0x9A6B3C), pl2 = mat(0x84582F);
+      var lanM = mat(0xE0443A, { emissive: 0xFF7A3A, emissiveIntensity: 0 }); if (lampMats.indexOf(lanM) < 0) lampMats.push(lanM);
+      BR.forEach(function (pr) {
+        var A = islands[pr[0]].a, B = islands[pr[1]].a, ax = A.pos[0], az = A.pos[1], dx = B.pos[0] - ax, dz = B.pos[1] - az, len = Math.sqrt(dx * dx + dz * dz), ux = dx / len, uz = dz / len;
+        var s0 = A.R * 0.92, e0 = len - B.R * 0.92, L = e0 - s0, stone = pr[0] === 'gold';
+        var N = Math.max(8, Math.round(L / 0.55)), segL = L / N, wd = stone ? 1.25 : 1.0, hm = stone ? 1.05 : 0.55;
+        var grp = new THREE.Group(); grp.position.set(ax + ux * s0, 0, az + uz * s0); grp.rotation.y = Math.atan2(-uz, ux); scene.add(grp);
+        function yAt(x) { var u = x / L; return 0.8 + hm * 4 * u * (1 - u); }
+        function slope(x) { var u = x / L; return Math.atan(hm * 4 * (1 - 2 * u) / L); }
+        for (var i = 0; i < N; i++) {
+          var x = (i + 0.5) * segL, y = yAt(x), sl = slope(x);
+          put(grp, Bx(segL * 1.1, stone ? 0.2 : 0.12, wd), stone ? (i % 2 ? stoneM : stoneD) : (i % 2 ? pl1 : pl2), x, y, 0, 0, 0, sl);
+          [-1, 1].forEach(function (sd) {
+            var zz = sd * wd / 2;
+            if (stone) put(grp, Bx(segL * 1.1, 0.3, 0.12), stoneM, x, y + 0.24, zz, 0, 0, sl);
+            else {
+              put(grp, Bx(segL * 1.1, 0.05, 0.05), redM, x, y + 0.5, zz, 0, 0, sl);
+              if (i % 2 === 0) put(grp, Cy(0.045, 0.045, 0.55, 6), redM, x, y + 0.26, zz);
+            }
+          });
+        }
+        [0.3, 0.7].forEach(function (u) {
+          var x = u * L, y = yAt(x);
+          if (stone) put(grp, Bx(0.45, y + 0.2, wd * 0.9), stoneD, x, (y - 0.1) / 2 - 0.05, 0);
+          else [-1, 1].forEach(function (sd) { put(grp, Cy(0.09, 0.11, y + 0.3, 6), mat(C.woodD), x, (y - 0.1) / 2 - 0.1, sd * wd * 0.38); });
+        });
+        [0.25, 0.75].forEach(function (u) {
+          var x = u * L, y = yAt(x); [-1, 1].forEach(function (sd) {
+            put(grp, Cy(0.04, 0.04, 0.5, 6), mat(C.woodD), x, y + (stone ? 0.55 : 0.78), sd * wd / 2);
+            put(grp, Sp(0.12), lanM, x, y + (stone ? 0.92 : 1.12), sd * wd / 2).scale.set(1, 1.25, 1);
+          });
+        });
+      });
+    })();
+
     /* ---- 海面 ---- */
     var wg = new THREE.PlaneGeometry(300, 300, 70, 70); wg.rotateX(-Math.PI / 2);
     var wp = wg.attributes.position, wbx = [], wbz = [];
@@ -1095,7 +1133,7 @@ td .n { display: block; color: var(--ink-soft); font-size: 12.5px; line-height: 
       var ha = fadeP(hailP, envS.wx === 'hail', dt); hailP.m.opacity = ha;
       if (hailP.p.visible) { hailP.p.position.set(cx, 0, cz); for (var h = 0; h < hailP.n; h++) wrap(hailP.arr, h, 26 * dt, 4 * dt, 0, HH); hailP.p.geometry.attributes.position.array.set(hailP.arr); hailP.p.geometry.attributes.position.needsUpdate = true; }
       var amode = envS.wx === 'clear' || envS.wx === 'overcast' ? (s === 0 ? 'petal' : s === 2 ? 'leaf' : s === 1 && night ? 'fly' : '') : '';
-      if (amode && amode !== ambMode) { ambMode = amode; ambP.m.color.setHex(amode === 'petal' ? 0xFFC2D4 : amode === 'leaf' ? 0xE8833A : 0xFFE27A); ambP.m.size = amode === 'fly' ? 3.4 : 4.4; }
+      if (amode && amode !== ambMode) { ambMode = amode; ambP.m.color.setHex(amode === 'petal' ? 0xFFC2D4 : amode === 'leaf' ? 0xE8833A : 0xFFE27A); ambP.m.size = amode === 'fly' ? 3.2 : 3.6; ambP.p.geometry.setDrawRange(0, amode === 'fly' ? 45 : 28); }
       var aa = fadeP(ambP, !!amode, dt); ambP.m.opacity = aa * (ambMode === 'fly' ? 0.55 + Math.sin(t * 3) * 0.35 : 0.9);
       if (ambP.p.visible) {
         ambP.p.position.set(cx, 0, cz);
