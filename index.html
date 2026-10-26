@@ -814,6 +814,41 @@ td .n { display: block; color: var(--ink-soft); font-size: 12.5px; line-height: 
       });
     })();
 
+    /* ---- 燕子 ---- */
+    var swallows = [];
+    (function () {
+      var dark = mat(0x1f2a44), belly = mat(0xF4EFE4), red = mat(0xB8332A);
+      var wingGeo = new THREE.BufferGeometry();
+      wingGeo.setAttribute('position', new THREE.Float32BufferAttribute([0, 0, 0, -0.55, 0.05, 0.12, -0.18, 0, -0.3], 3)); wingGeo.computeVertexNormals();
+      var wingMat = new THREE.MeshStandardMaterial({ color: 0x1f2a44, flatShading: true, side: DS, roughness: 0.9 });
+      for (var i = 0; i < 7; i++) {
+        var g = new THREE.Group();
+        var body = new THREE.Mesh(Sp(0.18), dark); body.scale.set(1.9, 0.7, 0.8); g.add(body);
+        var bl = new THREE.Mesh(Sp(0.14), belly); bl.scale.set(1.5, 0.5, 0.7); bl.position.set(0.03, -0.07, 0); g.add(bl);
+        var th = new THREE.Mesh(Sp(0.05), red); th.position.set(0.3, -0.02, 0); g.add(th);
+        var hd = new THREE.Mesh(Sp(0.1), dark); hd.position.set(0.36, 0.02, 0); g.add(hd);
+        var t1 = new THREE.Mesh(Co(0.05, 0.4, 3), dark); t1.rotation.z = Math.PI / 2 + 0.2; t1.position.set(-0.5, 0, 0.05); g.add(t1);
+        var t2 = new THREE.Mesh(Co(0.05, 0.4, 3), dark); t2.rotation.z = Math.PI / 2 - 0.2; t2.position.set(-0.5, 0, -0.05); g.add(t2);
+        var wl = new THREE.Mesh(wingGeo, wingMat), wr = new THREE.Mesh(wingGeo, wingMat); wr.scale.z = -1;
+        wl.position.set(0.08, 0.04, 0.1); wl.rotation.y = -Math.PI / 2; wr.position.set(0.08, 0.04, -0.1); wr.rotation.y = -Math.PI / 2;
+        var wL = new THREE.Group(), wR = new THREE.Group(); wL.position.set(0.05, 0.04, 0.1); wR.position.set(0.05, 0.04, -0.1);
+        wl.position.set(0, 0, 0); wr.position.set(0, 0, 0); wl.rotation.set(0, 0, 0); wr.rotation.set(0, 0, 0);
+        wl.rotation.y = Math.PI / 2; wr.rotation.y = Math.PI / 2; wl.scale.x = -1; wr.scale.set(-1, 1, -1);
+        wL.add(wl); wR.add(wr); g.add(wL); g.add(wR);
+        g.scale.setScalar(1.5 + (i % 3) * 0.15); scene.add(g);
+        swallows.push({ g: g, wL: wL, wR: wR, cx: (i % 2 ? 6 : -6) + Math.sin(i) * 8, cz: Math.cos(i * 1.7) * 9, rx: 14 + (i % 4) * 4, rz: 9 + (i % 3) * 3, y: 8 + (i % 4) * 1.8, sp: (0.2 + (i % 3) * 0.05) * (i % 2 ? -1 : 1), ph: i * 1.3 });
+      }
+    })();
+    ticks.push(function (t) {
+      for (var i = 0; i < swallows.length; i++) {
+        var w = swallows[i], a = t * w.sp + w.ph, x = w.cx + Math.cos(a) * w.rx, z = w.cz + Math.sin(a * 1.3) * w.rz;
+        var nx = w.cx + Math.cos(a + 0.05 * Math.sign(w.sp)) * w.rx, nz = w.cz + Math.sin((a + 0.05 * Math.sign(w.sp)) * 1.3) * w.rz;
+        w.g.position.set(x, w.y + Math.sin(t * 0.9 + w.ph) * 1.2, z);
+        w.g.rotation.y = Math.atan2(-(nz - z), nx - x); w.g.rotation.x = Math.sin(t * 0.9 + w.ph) * 0.12;
+        var f = reduce ? 0.3 : Math.sin(t * 11 + w.ph * 3) * 0.7; w.wL.rotation.x = f; w.wR.rotation.x = -f;
+      }
+    });
+
     /* ---- 海面 ---- */
     var wg = new THREE.PlaneGeometry(300, 300, 70, 70); wg.rotateX(-Math.PI / 2);
     var wp = wg.attributes.position, wbx = [], wbz = [];
