@@ -1,0 +1,1007 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>曾阿牛的冰火島</title>
+<meta name="description" content="曾阿牛的冰火島：用 3D 小島認識債券、股票、黃金、房產、選擇權、虛擬貨幣、期貨，附風險說明與官方資料來源。教育導覽，非投資建議。">
+<meta name="theme-color" content="#8FD3E3">
+<meta property="og:type" content="website">
+<meta property="og:title" content="曾阿牛的冰火島">
+<meta property="og:description" content="曾阿牛的冰火島：用 3D 小島認識債券、股票、黃金、房產、選擇權、虛擬貨幣、期貨，附風險說明與官方資料來源。教育導覽，非投資建議。">
+<meta property="og:locale" content="zh_TW">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='%23F2B705' stroke='%232A2118' stroke-width='2'/%3E%3Cpath d='M16 7l7 5v9l-7 4-7-4v-9z' fill='%2345B7C4' stroke='%232A2118' stroke-width='1.5'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=Noto+Sans+TC:wght@400;500;700;900&display=swap">
+<style>
+html { color-scheme: light; }
+/* Layout: 全螢幕 3D 低多邊形群島（可旋轉、點島鏡頭飛入）；右上角工具列、左上品牌卡、底部（桌機為左側）詳情面板；島上有編號熱點 */
+:root {
+  --sky-top: #8FD3E3;
+  --sky-bot: #EAF6EE;
+  --sheet: #FFFBF2;
+  --sheet-2: #FFEFCB;
+  --ink: #2A2118;
+  --ink-soft: #6B5E50;
+  --line: #E9DEC6;
+  --gold: #E5A100;
+  --gold-deep: #96630A;
+  --chip: #F3EAD6;
+  --pill: rgba(255, 251, 242, 0.95);
+  --btn: #1F1A14;
+  --btn-ink: #FFF9EC;
+  --warn: #B34A1A;
+  --veil: rgba(30, 20, 6, 0.34);
+  --font-body: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --sky-top: #07111F; --sky-bot: #17324A; --sheet: #1B2631; --sheet-2: #2B3744; --ink: #F4ECDC; --ink-soft: #B9AE9B;
+    --line: #33414E; --gold: #F5B82E; --gold-deep: #F0C55A; --chip: #2A3744; --pill: rgba(27, 38, 49, 0.95);
+    --btn: #F4ECDC; --btn-ink: #1B1610; --warn: #F3A57F; --veil: rgba(0, 0, 0, 0.5);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --sky-top: #07111F; --sky-bot: #17324A; --sheet: #1B2631; --sheet-2: #2B3744; --ink: #F4ECDC; --ink-soft: #B9AE9B;
+  --line: #33414E; --gold: #F5B82E; --gold-deep: #F0C55A; --chip: #2A3744; --pill: rgba(27, 38, 49, 0.95);
+  --btn: #F4ECDC; --btn-ink: #1B1610; --warn: #F3A57F; --veil: rgba(0, 0, 0, 0.5);
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body { margin: 0; background: var(--sky-bot); color: var(--ink); font-family: var(--font-body); font-size: 15px; line-height: 1.65; overflow: hidden; -webkit-tap-highlight-color: transparent; }
+button { font: inherit; color: inherit; cursor: pointer; }
+a { color: inherit; }
+:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+
+#stage { position: relative; width: 100%; height: 100%; overflow: hidden; background: linear-gradient(var(--sky-top), var(--sky-bot) 58%); }
+#gl { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; cursor: grab; }
+#gl.drag { cursor: grabbing; }
+#labels { position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: 2; }
+
+/* 上層介面：品牌卡與工具列 */
+.ui { position: absolute; inset: 0; z-index: 4; pointer-events: none; display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;
+  padding-top: max(16px, env(safe-area-inset-top, 0px)); padding-bottom: 16px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.ui > * { pointer-events: auto; }
+.brand { background: var(--pill); border-radius: 22px; padding: 10px 18px 10px 16px; box-shadow: 0 8px 26px rgba(50, 35, 10, .22); display: flex; align-items: center; gap: 12px; min-width: 0; }
+.brand .logo { font-weight: 900; font-size: 26px; line-height: 1; color: var(--gold-deep); letter-spacing: .02em; white-space: nowrap; }
+.brand .sub { display: grid; gap: 1px; border-left: 2px solid var(--line); padding-left: 12px; }
+.brand .sub b { font-size: 15px; line-height: 1.25; }
+.brand .sub span { font: 600 11px var(--font-mono); letter-spacing: .16em; color: var(--gold-deep); }
+.tools { display: grid; gap: 10px; }
+.tool { display: flex; align-items: center; gap: 8px; border: 0; border-radius: 18px; padding: 9px 16px 9px 12px; background: var(--pill); box-shadow: 0 6px 20px rgba(50, 35, 10, .2); font-weight: 700; font-size: 14.5px; }
+.tool svg { width: 20px; height: 20px; flex: none; }
+.tool:hover { background: var(--sheet-2); }
+@media (max-width: 560px) { .brand .sub { display: none; } .brand .logo { font-size: 21px; } .tool { padding: 9px 12px 9px 10px; } }
+
+@media (max-width: 899px) { body.sheet-open .tools { display: none; } }
+.q small { display: block; margin-top: 4px; font-size: 12.5px; color: var(--ink-soft); }
+.foot { position: absolute; left: 50%; bottom: max(12px, env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 3; width: max-content; max-width: calc(100% - 32px);
+  background: var(--pill); border-radius: 999px; padding: 6px 16px; font-size: 12.5px; color: var(--ink-soft); text-align: center; box-shadow: 0 4px 14px rgba(50, 35, 10, .16); transition: opacity .3s; }
+body.sheet-open .foot { opacity: 0; pointer-events: none; }
+
+/* 島名標籤與熱點 */
+.lab { position: absolute; left: 0; top: 0; pointer-events: auto; display: flex; align-items: center; gap: 7px; padding: 6px 14px 6px 11px; border: 0; border-radius: 999px;
+  background: var(--pill); box-shadow: 0 5px 16px rgba(40, 28, 8, .28); font-weight: 700; font-size: 14.5px; white-space: nowrap; will-change: transform; transition: opacity .25s, background .2s; }
+.lab b { font: 600 12px var(--font-mono); color: var(--gold-deep); }
+.lab:hover { background: var(--sheet-2); }
+.lab.dim { opacity: .5; }
+.lab.on { background: var(--btn); color: var(--btn-ink); }
+.lab.on b { color: var(--gold); }
+.hs { position: absolute; left: 0; top: 0; pointer-events: auto; display: flex; align-items: center; border: 0; background: transparent; padding: 0; will-change: transform; }
+.hs .n { position: relative; z-index: 2; width: 30px; height: 30px; border-radius: 50%; background: #fff; color: #2A2118; border: 3px solid var(--gold); display: grid; place-items: center; font: 700 13px var(--font-mono); box-shadow: 0 3px 10px rgba(40, 28, 8, .3); }
+.hs .t { margin-left: -12px; padding: 5px 13px 5px 18px; border-radius: 999px; background: var(--pill); font-weight: 700; font-size: 13.5px; white-space: nowrap; box-shadow: 0 4px 12px rgba(40, 28, 8, .26); }
+.hs.on .n { background: var(--gold); }
+.hs.on .t { background: var(--btn); color: var(--btn-ink); }
+
+/* 詳情面板 */
+.sheet { position: absolute; left: 0; right: 0; bottom: 0; margin-inline: auto; width: min(680px, 100%); max-height: 56%; z-index: 6; display: flex; flex-direction: column;
+  background: linear-gradient(var(--sheet-2), var(--sheet) 140px); border-radius: 28px 28px 0 0; box-shadow: 0 -12px 40px rgba(40, 25, 5, .3);
+  transform: translateY(106%); transition: transform .5s cubic-bezier(.2, .8, .2, 1); padding-bottom: env(safe-area-inset-bottom, 0px); }
+.sheet.open { transform: none; }
+.grab { width: 56px; height: 6px; border-radius: 3px; background: var(--line); margin: 10px auto 0; flex: none; }
+.scroll { overflow-y: auto; overscroll-behavior: contain; padding: 14px max(22px, env(safe-area-inset-right, 0px)) 30px max(22px, env(safe-area-inset-left, 0px)); }
+.xbtn { position: absolute; top: 14px; right: max(14px, env(safe-area-inset-right, 0px)); width: 40px; height: 40px; border-radius: 50%; border: 0; background: transparent; font-size: 26px; line-height: 1; z-index: 2; }
+.xbtn:hover { background: var(--chip); }
+@media (min-width: 900px) {
+  .sheet { left: max(16px, env(safe-area-inset-left, 0px)); right: auto; margin: 0; width: 440px; bottom: 16px; max-height: calc(100% - 136px); border-radius: 26px; transform: translateX(-112%); }
+  .sheet.open { transform: none; }
+}
+.sh-head { display: grid; grid-template-columns: 76px minmax(0, 1fr); gap: 14px; align-items: center; padding-right: 36px; }
+.tile { width: 76px; height: 76px; border-radius: 22px; display: grid; place-items: center; background: linear-gradient(145deg, var(--ta), var(--tb)); color: #3A2C14; box-shadow: inset 0 0 0 2px rgba(255, 255, 255, .55), 0 8px 18px rgba(80, 50, 0, .2); }
+.tile svg { width: 40px; height: 40px; }
+.kick { font: 600 12.5px var(--font-mono); letter-spacing: .14em; color: var(--gold-deep); }
+.sh-head h2 { margin: 2px 0 0; font-size: 28px; line-height: 1.25; font-weight: 900; }
+.lead { margin: 14px 0 0; color: var(--ink-soft); font-size: 15.5px; }
+.q { margin: 14px 0 0; padding: 4px 0 4px 14px; border-left: 4px solid var(--gold); font-size: 15.5px; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0 6px; }
+.chip { padding: 5px 13px; border-radius: 999px; background: var(--chip); font-size: 13px; font-weight: 700; color: var(--ink-soft); }
+details.sec { border-top: 1.5px solid var(--line); padding: 11px 0; }
+details.sec > summary { list-style: none; display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 16px; cursor: pointer; }
+details.sec > summary::-webkit-details-marker { display: none; }
+details.sec > summary::after { content: "＋"; margin-left: auto; color: var(--ink-soft); font-weight: 400; }
+details.sec[open] > summary::after { content: "－"; }
+.num { width: 27px; height: 27px; border-radius: 50%; border: 2.5px solid var(--gold); display: grid; place-items: center; font: 700 12px var(--font-mono); flex: none; }
+details.sec.hl .num { background: var(--gold); color: #2A2118; }
+.body { padding: 8px 0 6px 37px; }
+.body p { margin: 0; }
+.body ul { margin: 0; padding-left: 1.15em; display: grid; gap: 5px; }
+.risk { border-left: 4px solid var(--warn); padding-left: 12px; }
+.rel { display: grid; gap: 8px; }
+.rel button { text-align: left; border: 1.8px solid var(--line); background: transparent; border-radius: 14px; padding: 8px 12px; line-height: 1.5; }
+.rel button:hover { border-color: var(--gold); background: var(--chip); }
+.rel b { margin-right: 6px; }
+.src { display: flex; flex-wrap: wrap; gap: 8px; }
+.src a { border: 2px solid var(--gold); border-radius: 999px; padding: 3px 14px; font-size: 13.5px; font-weight: 700; text-decoration: none; }
+.src a:hover { background: var(--gold); color: #2A2118; }
+.fine { margin: 14px 0 0; font-size: 12.5px; color: var(--ink-soft); }
+
+/* 彈窗：導覽、清單、比較 */
+.modal { position: absolute; inset: 0; z-index: 12; display: none; place-items: center; background: var(--veil); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  padding: 16px max(16px, env(safe-area-inset-right, 0px)) 16px max(16px, env(safe-area-inset-left, 0px)); }
+.modal.open { display: grid; }
+.mbox { position: relative; width: min(920px, 100%); max-height: 88%; overflow: auto; background: var(--sheet); border-radius: 28px; padding: 26px; box-shadow: 0 24px 60px rgba(0, 0, 0, .35); }
+.mbox h2 { margin: 0 0 14px; font-size: 24px; font-weight: 900; }
+.card { width: min(440px, 100%); background: var(--sheet); border-radius: 30px; padding: 30px 28px 26px; box-shadow: 0 24px 60px rgba(0, 0, 0, .38); }
+.card h3 { margin: 6px 0 10px; font-size: 32px; line-height: 1.25; font-weight: 900; text-wrap: balance; }
+.card p { margin: 0; color: var(--ink-soft); font-size: 16px; }
+.card .row { display: flex; justify-content: space-between; align-items: center; margin-top: 26px; gap: 12px; }
+.btn { border: 1.8px solid var(--line); background: transparent; border-radius: 16px; padding: 12px 22px; font-weight: 700; font-size: 16px; }
+.btn.pri { background: var(--btn); color: var(--btn-ink); border-color: var(--btn); padding: 12px 26px; }
+.dots { display: flex; gap: 6px; }
+.dots i { width: 8px; height: 8px; border-radius: 50%; background: var(--line); }
+.dots i.on { background: var(--gold); width: 22px; border-radius: 4px; }
+.list { display: grid; gap: 8px; }
+.li { display: grid; grid-template-columns: 56px minmax(0, 1fr); gap: 14px; align-items: center; text-align: left; border: 1.8px solid var(--line); background: transparent; border-radius: 20px; padding: 10px 14px; }
+.li:hover { border-color: var(--gold); background: var(--chip); }
+.li .tile { width: 56px; height: 56px; border-radius: 16px; }
+.li .tile svg { width: 30px; height: 30px; }
+.li b { font-size: 18px; }
+.li small { display: block; color: var(--ink-soft); font-size: 13.5px; line-height: 1.5; }
+.tw { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; min-width: 720px; font-size: 13.5px; }
+th, td { border-bottom: 1.5px dashed var(--line); padding: 10px; text-align: left; vertical-align: top; }
+thead th { font: 600 11px var(--font-mono); letter-spacing: .08em; color: var(--ink-soft); }
+tbody th { font-size: 16px; white-space: nowrap; }
+tbody th button { border: 0; background: transparent; padding: 0; font-weight: 900; text-decoration: underline wavy var(--gold); text-underline-offset: 5px; }
+.lv { display: inline-flex; align-items: center; gap: 7px; font-weight: 700; white-space: nowrap; }
+.gems { display: inline-flex; gap: 5px; }
+.gems i { width: 9px; height: 9px; transform: rotate(45deg); border: 1.8px solid var(--ink-soft); border-radius: 2px; }
+.gems i.f { background: var(--gold); border-color: var(--ink); }
+td .n { display: block; color: var(--ink-soft); font-size: 12.5px; line-height: 1.5; margin-top: 2px; }
+.note { font-size: 12.5px; color: var(--ink-soft); margin: 12px 0 0; }
+.loading { position: absolute; inset: 0; z-index: 9; display: grid; place-items: center; background: linear-gradient(var(--sky-top), var(--sky-bot)); font-weight: 700; color: var(--ink-soft); transition: opacity .6s; }
+.loading.gone { opacity: 0; pointer-events: none; }
+.nogl { position: absolute; left: 50%; top: 96px; transform: translateX(-50%); z-index: 3; background: var(--pill); border-radius: 16px; padding: 12px 18px; max-width: calc(100% - 32px); display: none; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<div id="stage">
+  <canvas id="gl" aria-label="曾阿牛的冰火島 3D 江湖圖，可拖曳旋轉，點島登陸"></canvas>
+  <div id="labels"></div>
+
+  <div class="ui">
+    <div class="brand"><span class="logo">曾阿牛的冰火島</span><span class="sub"><b>七島投資導覽</b><span>ICE · FIRE ISLAND</span></span></div>
+    <div class="tools" role="toolbar" aria-label="檢視工具">
+      <button class="tool" id="bHome"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17L17 7M9 7h8v8"/></svg>全景</button>
+      <button class="tool" id="bList"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M5 7h14M5 12h14M5 17h14"/></svg>清單</button>
+      <button class="tool" id="bCmp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16v14H4zM4 10h16M10 5v14"/></svg>比較</button>
+      <button class="tool" id="bTime"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 019.5 4a8 8 0 1010.5 10.5z"/></svg><span id="bTimeT">日夜</span></button>
+    </div>
+  </div>
+
+  <div class="foot">教育導覽，非投資建議 · 拖曳旋轉、雙指縮放、點島登陸</div>
+  <div class="nogl" id="nogl">這台裝置無法顯示 3D 場景，請改用上方「清單」瀏覽七座島。</div>
+
+  <aside class="sheet" id="sheet" aria-live="polite">
+    <div class="grab"></div>
+    <button class="xbtn" id="sClose" aria-label="關閉">×</button>
+    <div class="scroll" id="sBody"></div>
+  </aside>
+
+  <div class="modal" id="mList"><div class="mbox"><button class="xbtn" data-close aria-label="關閉">×</button><h2>七座島清單</h2><div class="list" id="listBox"></div>
+    <p class="note">本站為一般性教育導覽，不提供即時報價，也不構成任何投資建議或買賣邀約。投資有賺有賠，請依自身財務狀況判斷。頁面中的角色、船隻、島嶼與寶石皆為本站原創設計，與任何現有武俠作品角色及政治人物、政黨、競選團隊或其網站沒有關係。</p></div></div>
+  <div class="modal" id="mCmp"><div class="mbox"><button class="xbtn" data-close aria-label="關閉">×</button><h2>七座島比較</h2><div class="tw" id="cmpBox"></div></div></div>
+  <div class="modal" id="mIntro"><div class="card" id="introCard"></div></div>
+  <div class="loading" id="loading">正在擺好武林群島…</div>
+</div>
+
+<noscript><p style="position:fixed;inset:0;display:grid;place-items:center;margin:0;padding:24px;text-align:center;background:#FFFBF2;color:#2A2118;font-size:18px;z-index:99">曾阿牛的冰火島需要啟用 JavaScript 才能顯示 3D 地圖。</p></noscript>
+<script src="vendor/three.min.js"></script>
+<script>
+(function () {
+  'use strict';
+  var $ = function (s) { return document.querySelector(s); };
+  try { var savedTheme = localStorage.getItem('gi-theme'); if (savedTheme === 'dark' || savedTheme === 'light') document.documentElement.setAttribute('data-theme', savedTheme); } catch (e) {}
+  var reduce = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+
+  /* ================= 資料 ================= */
+  var ASSETS = [
+    { id: 'bond', no: '01', name: '債券', title: '債券島', code: 'TPEx · CBC', pos: [-13, 2], R: 3.7, dock: 3.14, ta: '#DCEEFC', tb: '#8EC3EE',
+      tag: '把錢借給政府或公司，領利息，到期拿回本金。',
+      what: '債券有票面利率與到期日。持有到期且發行人沒有違約，現金流相對可預期，但中途賣出的價格會變動。',
+      risk: '市場利率上升時，已發行債券的價格通常下跌；發行人可能違約；外幣計價債券還有匯率風險。',
+      tw: ['可透過銀行、券商取得債券，或買債券 ETF 以較低金額進場。', '買之前要看發行人信用、到期日，以及打算持有到期還是中途賣出。'],
+      ask: ['我會持有到期，還是中途就賣？', '發行人的信用狀況我看得懂嗎？'],
+      src: [['證券櫃檯買賣中心', 'https://www.tpex.org.tw/'], ['中央銀行', 'https://www.cbc.gov.tw/']] },
+    { id: 'stock', no: '02', name: '股票', title: '股票島', code: 'TWSE · TPEx', pos: [-9, -8.5], R: 3.9, dock: -2.2, ta: '#D8F5E6', tb: '#8FDDB5',
+      tag: '買進公司的一部分，賺價差與股利。',
+      what: '持有股票就是持有公司的一小部分股權。收益來自股價上漲與公司發放的股利，兩者都不保證。',
+      risk: '股價每天波動，個股可能大幅下跌甚至下市；押單一公司時，集中風險最高。',
+      tw: ['在證券商開戶，透過證券交易所或櫃買中心的市場下單。', '想分散風險，可以看追蹤指數的 ETF，不必只選個股。', '台股現股有每日漲跌幅限制，實際幅度與交易規則請查證交所公告。'],
+      ask: ['這筆錢三年內會用到嗎？', '單一標的跌一半，我撐得住嗎？'],
+      src: [['臺灣證券交易所', 'https://www.twse.com.tw/zh/'], ['公開資訊觀測站', 'https://mops.twse.com.tw/'], ['證券櫃檯買賣中心', 'https://www.tpex.org.tw/']] },
+    { id: 'gold', no: '03', name: '黃金', title: '黃金寶閣島', code: 'BOT 牌價', pos: [0, 0], R: 4.9, dock: 1.45, ta: '#FFF0BF', tb: '#F5C84A',
+      tag: '不生利息的實物型資產，常被當作避險選項討論。',
+      what: '黃金不會配息，收益只來自價格變化。價格受國際供需、美元與利率環境等因素影響。',
+      risk: '價格會波動，也可能長期沒有上漲；買進與賣出之間有價差；以美元計價的金價還會受匯率影響。',
+      tw: ['常見方式有銀行黃金存摺、實體金條金幣，或黃金相關 ETF。', '不同管道的買賣價差、保管方式與手續費不同，下單前要比較。'],
+      ask: ['我買黃金是為了避險，還是期待價差？', '買賣價差我算過了嗎？'],
+      src: [['臺灣銀行黃金牌價', 'https://rate.bot.com.tw/gold?Lang=zh-TW']] },
+    { id: 'property', no: '04', name: '房產', title: '房產島', code: '實價登錄', pos: [-7, 10.5], R: 3.9, dock: 1.9, ta: '#FFE3D8', tb: '#F5A98E',
+      tag: '金額最大、最難快速變現的一區。',
+      what: '收益可能來自租金與房價變動，但持有期間有貸款利息、稅負、修繕與空置等成本。',
+      risk: '流動性低，想賣時不一定能立刻以預期價格成交；有貸款時，利率上升與收入變動會直接增加壓力。',
+      tw: ['用內政部實價登錄查詢同區成交資料，比看開價更接近真實行情。', '出售時需留意房地合一等稅制，貸款成數與利率要先算最壞情況。'],
+      ask: ['每月還款占收入多少，失業三個月撐得住嗎？', '我算進持有成本了嗎？'],
+      src: [['內政部實價登錄', 'https://lvr.land.moi.gov.tw/'], ['國家發展委員會', 'https://www.ndc.gov.tw/']] },
+    { id: 'options', no: '05', name: '選擇權', title: '選擇權島', code: 'TAIFEX', pos: [3, -13], R: 3.6, dock: -1.2, ta: '#EADFFB', tb: '#B9A1EE',
+      tag: '買賣「權利」的衍生性商品，有到期日。',
+      what: '買方付出權利金，取得在未來以約定價格買進或賣出的權利；賣方收取權利金，承擔義務。',
+      risk: '買方最大損失是權利金，但常常會全部虧掉；賣方可能虧損遠超過收到的權利金，並需要繳交保證金。',
+      tw: ['需在期貨商開戶，並完成商品風險預告等程序。', '臺灣期貨交易所有以指數與個股為標的的選擇權契約，規格以期交所公告為準。'],
+      ask: ['我能說清楚這張契約最壞會虧多少嗎？', '到期日前，我盯得住部位嗎？'],
+      src: [['臺灣期貨交易所', 'https://www.taifex.com.tw/']] },
+    { id: 'crypto', no: '06', name: '虛擬貨幣', title: '虛擬貨幣島', code: 'FSC', pos: [9.5, 10], R: 3.5, dock: 0.5, ta: '#D5F6F7', tb: '#7ED2D8',
+      tag: '價格波動極大，平台與詐騙風險另外要防。',
+      what: '虛擬貨幣在多數平台可全天候交易，價格主要由市場供需與情緒帶動，沒有公司獲利或票息作為基礎。',
+      risk: '價格可能短時間劇烈漲跌；交易平台可能倒閉或遭駭；假投資與詐騙很常見；相關規範仍在演進。',
+      tw: ['先到金管會網站查詢業者是否完成相關登記與公告，再決定是否使用。', '私鑰、密碼與驗證碼不要交給任何人，別相信保證獲利。'],
+      ask: ['這筆錢全部歸零我能接受嗎？', '這個平台出事時，我的資產怎麼辦？'],
+      src: [['金融監督管理委員會', 'https://www.fsc.gov.tw/']] },
+    { id: 'futures', no: '07', name: '期貨', title: '期貨島', code: 'TAIFEX', pos: [13, -5.5], R: 3.7, dock: -0.4, ta: '#FFDDEA', tb: '#F59BBB',
+      tag: '用保證金做多空的槓桿工具，每天結算盈虧。',
+      what: '期貨以契約約定未來交易，投資人只需繳保證金，部位的盈虧每天依結算價計算。',
+      risk: '槓桿讓虧損快速放大，虧損可能超過原始保證金，需要補繳；部位到期前要平倉或轉倉。',
+      tw: ['需在期貨商開戶，並確認保證金、手續費與交易時間。', '臺灣期貨交易所有臺指期貨、小型臺指期貨等契約，規格與保證金以期交所公告為準。'],
+      ask: ['被追繳保證金時，我有現金補嗎？', '我設好停損了嗎？'],
+      src: [['臺灣期貨交易所', 'https://www.taifex.com.tw/']] }
+  ];
+  var LINKS = [
+    ['bond', 'stock', '利率變動會同時影響債券價格與股票估值。'],
+    ['bond', 'property', '房貸利率與債券殖利率，都受整體利率環境牽動。'],
+    ['bond', 'gold', '利率環境變化時，不配息的黃金常與債券一起被拿來比較。'],
+    ['stock', 'options', '股票與股價指數是選擇權的標的。'],
+    ['stock', 'futures', '股價指數期貨常用來對照或避開股票部位的風險。'],
+    ['options', 'futures', '同屬衍生性商品，都要看保證金與到期日。'],
+    ['gold', 'crypto', '兩者常被放在「非傳統資產」一起討論，但價格走勢不一定同向。']
+  ];
+  var COMPARE = {
+    cols: ['入場門檻', '流動性', '槓桿程度', '常見現金流', '最壞情況'],
+    rows: {
+      bond:     [[2, '中', '債券 ETF 門檻低，直接買債常需較高金額'], [2, '中', '視債券種類與市場'], [0, '無', ''], '票息', '發行人違約，或利率上升時賣出虧損'],
+      stock:    [[1, '低', '可小額買進，ETF 門檻更低'], [3, '高', '盤中可交易，視個股成交量'], [0, '無', '現股無槓桿，融資另計'], '股利，不一定發放', '個股大跌或下市，損失本金'],
+      gold:     [[1, '低', '存摺與 ETF 可小額'], [3, '高', '主要管道買賣方便，但有價差'], [0, '無', ''], '無', '價格下跌，且買賣價差吃掉報酬'],
+      property: [[3, '高', '頭期款與貸款門檻高'], [1, '低', '成交需要時間'], [2, '中', '房貸帶來槓桿'], '租金（若出租）', '貸款壓力下被迫賣出，或長期難成交'],
+      options:  [[2, '中', '需開期貨商帳戶與保證金'], [2, '中', '依契約與履約價而異'], [3, '高', '內含高槓桿'], '無', '買方損失權利金；賣方可能虧損超過保證金'],
+      crypto:   [[1, '低', '多數平台可小額'], [2, '中', '主流幣較好，小幣種可能難成交'], [0, '無', '現貨無槓桿，合約商品另計'], '無（質押等另計）', '價格歸零、平台倒閉或被盜'],
+      futures:  [[2, '中', '需繳保證金'], [3, '高', '主要契約通常較活絡'], [3, '高', '保證金交易'], '無', '虧損可能超過保證金，需補繳']
+    }
+  };
+  var SECT = ['這門功夫是什麼', '破綻在哪（風險）', '在台灣怎麼入門（進場）', '下山前問自己', '江湖路線連到哪', '官方祕笈（資料來源）'];
+  var HOTL = ['功夫是什麼', '破綻在哪', '怎麼入門', '問自己', '路線', '官方祕笈'];
+  var ICONS = {
+    bond: '<path d="M6 3h9l4 4v14H6zM15 3v4h4M9 12h7M9 16h7"/>',
+    stock: '<path d="M3 20h18M6 20v-7M11 20V6M16 20v-10"/><path d="M13 4h4v4"/>',
+    gold: '<path d="M3 18l3-8h12l3 8zM8.5 14h7"/>',
+    property: '<path d="M3 11l9-7 9 7M6 10v10h12V10M10 20v-6h4v6"/>',
+    options: '<path d="M6 3h12M6 21h12M7 3c0 5 5 6 5 9s-5 4-5 9M17 3c0 5-5 6-5 9s5 4 5 9"/>',
+    crypto: '<path d="M12 3l8 4.5v9L12 21l-8-4.5v-9zM12 8l4 4-4 4-4-4z"/>',
+    futures: '<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>'
+  };
+  var CAP = {
+    bond: '領利息很穩，但利率一升，價格就會降。',
+    stock: '公司賺錢才有股利，但股價每天都會跳。',
+    gold: '它不生利息，賺的只是價差。',
+    property: '最大的一筆錢，也是最難快速變現的一筆。',
+    options: '買方最多賠權利金，賣方可能賠得更多。',
+    crypto: '漲跌最猛的海域，也是騙子最多的海域。',
+    futures: '槓桿是雙面刃：賺得快，賠得更快。'
+  };
+  var byId = {}; ASSETS.forEach(function (a) { byId[a.id] = a; });
+  function icon(id) { return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + ICONS[id] + '</svg>'; }
+  function tile(a, cls) { return '<div class="tile ' + (cls || '') + '" style="--ta:' + a.ta + ';--tb:' + a.tb + '">' + icon(a.id) + '</div>'; }
+  function gems(n) { var s = '<span class="gems" aria-hidden="true">'; for (var i = 1; i <= 3; i++) s += '<i class="' + (i <= n ? 'f' : '') + '"></i>'; return s + '</span>'; }
+  function relOf(id) { return LINKS.filter(function (l) { return l[0] === id || l[1] === id; }); }
+
+  /* ================= 面板與彈窗 ================= */
+  var sel = null;
+  function renderSheet(a, openIdx) {
+    var rels = relOf(a.id);
+    var cr = COMPARE.rows[a.id];
+    var relHtml = rels.map(function (l) {
+      var o = byId[l[0] === a.id ? l[1] : l[0]];
+      return '<button data-go="' + o.id + '"><b>' + o.name + '</b>' + l[2] + '</button>';
+    }).join('');
+    var bodies = [
+      '<p>' + a.what + '</p>',
+      '<p class="risk">' + a.risk + '</p>',
+      '<ul>' + a.tw.map(function (t) { return '<li>' + t + '</li>'; }).join('') + '</ul>',
+      '<ul>' + a.ask.map(function (t) { return '<li>' + t + '</li>'; }).join('') + '</ul>',
+      '<div class="rel">' + relHtml + '</div>',
+      '<div class="src">' + a.src.map(function (s) { return '<a href="' + s[1] + '" target="_blank" rel="noopener">' + s[0] + ' ↗</a>'; }).join('') + '</div>'
+    ];
+    var html = '<div class="sh-head">' + tile(a) + '<div><div class="kick">ISLAND ' + a.no + ' · ' + a.code + '</div><h2>' + a.title + '</h2></div></div>' +
+      '<p class="lead">' + a.tag + '</p>' +
+      '<blockquote class="q" style="margin-left:0">「' + CAP[a.id] + '」<small>—— 掌門一句話</small></blockquote>' +
+      '<div class="chips"><span class="chip">流動性 ' + cr[1][1] + '</span><span class="chip">槓桿 ' + cr[2][1] + '</span><span class="chip">6 個要點</span><span class="chip">' + rels.length + ' 條水路</span></div>';
+    bodies.forEach(function (b, i) {
+      html += '<details class="sec' + (i === openIdx ? ' hl' : '') + '" id="sec' + i + '"' + (i === openIdx ? ' open' : '') + '><summary><span class="num">' + (i + 1) + '</span>' + SECT[i] + '</summary><div class="body">' + b + '</div></details>';
+    });
+    html += '<p class="fine">本站為一般性教育導覽，不構成投資建議。人物與場景皆為本站原創，與任何現有武俠作品角色、政治人物或競選團隊無關。</p>';
+    $('#sBody').innerHTML = html;
+    $('#sBody').scrollTop = 0;
+  }
+  function openSection(i) {
+    var secs = document.querySelectorAll('details.sec');
+    secs.forEach(function (d, k) { d.classList.toggle('hl', k === i); d.open = (k === i); });
+    var el = $('#sec' + i);
+    if (el) setTimeout(function () { el.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'nearest' }); }, 40);
+    document.querySelectorAll('.hs').forEach(function (h, k) { h.classList.toggle('on', k === i); });
+  }
+  function select(id) {
+    var a = byId[id]; if (!a) return;
+    sel = id;
+    closeModals(true);
+    renderSheet(a, 0);
+    $('#sheet').classList.add('open');
+    document.body.classList.add('sheet-open');
+    if (world) world.focus(a);
+    refreshLabels();
+  }
+  function deselect() {
+    sel = null;
+    $('#sheet').classList.remove('open');
+    document.body.classList.remove('sheet-open');
+    if (world) world.home();
+    refreshLabels();
+  }
+  function closeModals(keep) { document.querySelectorAll('.modal').forEach(function (m) { m.classList.remove('open'); }); }
+  function openModal(id) { $('#sheet').classList.remove('open'); document.body.classList.remove('sheet-open'); if (sel && world) { sel = null; world.home(); refreshLabels(); } closeModals(); $(id).classList.add('open'); }
+
+  $('#listBox').innerHTML = ASSETS.map(function (a) {
+    return '<button class="li" data-go="' + a.id + '">' + tile(a) + '<span><b>' + a.no + '　' + a.title + '</b><small>' + a.tag + '</small></span></button>';
+  }).join('');
+  var th = '<thead><tr><th>島</th>' + COMPARE.cols.map(function (c) { return '<th>' + c + '</th>'; }).join('') + '</tr></thead>';
+  var tb = '<tbody>' + ASSETS.map(function (a) {
+    var cells = COMPARE.rows[a.id].map(function (c) {
+      if (typeof c === 'string') return '<td>' + c + '</td>';
+      return '<td><span class="lv">' + gems(c[0]) + c[1] + '</span>' + (c[2] ? '<span class="n">' + c[2] + '</span>' : '') + '</td>';
+    }).join('');
+    return '<tr><th scope="row"><button data-go="' + a.id + '">' + a.name + '</button></th>' + cells + '</tr>';
+  }).join('') + '</tbody>';
+  $('#cmpBox').innerHTML = '<table>' + th + tb + '</table><p class="note">標記越多代表程度越高（無＝沒有）。以上為定性示意，用來比較各島的性格，不是統計數據；實際條件依商品與業者而異。</p>';
+
+  var STEPS = [
+    ['幸會，少俠 / 01', '每座島是一類資產', '債券、股票、黃金、房產、選擇權、虛擬貨幣、期貨，各占一座島。點一座島登陸，或用右上角的清單。'],
+    ['幸會，少俠 / 02', '商船是它們的關係', '島與島之間往來的商船，代表資產之間的關聯。選到一座島，相關水路會亮成金色。'],
+    ['幸會，少俠 / 03', '先看破綻，再談功夫', '每座島都標示風險與官方資料來源。本站是教育導覽，不是投資建議；人物與場景皆為原創武俠設計，與任何現有小說、影視作品及其角色無關；也，與任何政治人物或競選團隊無關。']
+  ];
+  var step = 0;
+  function renderIntro() {
+    var s = STEPS[step], last = step === STEPS.length - 1;
+    $('#introCard').innerHTML = '<div class="kick">' + s[0] + '</div><h3>' + s[1] + '</h3><p>' + s[2] + '</p>' +
+      '<div class="row"><button class="btn" data-skip>略過</button><div class="dots">' + STEPS.map(function (x, i) { return '<i class="' + (i === step ? 'on' : '') + '"></i>'; }).join('') + '</div><button class="btn pri" data-next>' + (last ? '開始出航' : '下一步 →') + '</button></div>';
+  }
+  function endIntro() { $('#mIntro').classList.remove('open'); try { localStorage.setItem('gi-intro', '1'); } catch (e) {} }
+  var seen = false; try { seen = localStorage.getItem('gi-intro') === '1'; } catch (e) {}
+  if (!seen) { renderIntro(); $('#mIntro').classList.add('open'); }
+
+  document.addEventListener('click', function (e) {
+    var t = e.target;
+    var go = t.closest('[data-go]'); if (go) { select(go.dataset.go); return; }
+    if (t.closest('[data-skip]')) { endIntro(); return; }
+    if (t.closest('[data-next]')) { if (step >= STEPS.length - 1) endIntro(); else { step++; renderIntro(); } return; }
+    if (t.closest('[data-close]')) { closeModals(); return; }
+    if (t.classList && t.classList.contains('modal') && t.id !== 'mIntro') { closeModals(); }
+  });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { if (document.querySelector('.modal.open')) closeModals(); else if (sel) deselect(); } });
+  $('#sClose').addEventListener('click', deselect);
+  $('#bHome').addEventListener('click', function () { closeModals(); if (sel) deselect(); else if (world) world.home(); });
+  $('#bList').addEventListener('click', function () { openModal('#mList'); });
+  $('#bCmp').addEventListener('click', function () { openModal('#mCmp'); });
+  function isNight() {
+    var t = document.documentElement.getAttribute('data-theme');
+    if (t === 'dark') return true; if (t === 'light') return false;
+    return !!(window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches);
+  }
+  $('#bTime').addEventListener('click', function () { var nt = isNight() ? 'light' : 'dark'; document.documentElement.setAttribute('data-theme', nt); try { localStorage.setItem('gi-theme', nt); } catch (e) {} });
+
+  /* ================= 3D 世界 ================= */
+  var world = null;
+  var labelEls = {};
+  function refreshLabels() {
+    ASSETS.forEach(function (a) {
+      var el = labelEls[a.id]; if (!el) return;
+      el.classList.toggle('on', sel === a.id);
+      el.classList.toggle('dim', !!sel && sel !== a.id);
+    });
+  }
+  ASSETS.forEach(function (a) {
+    var b = document.createElement('button');
+    b.className = 'lab'; b.dataset.go = a.id; b.innerHTML = '<b>' + a.no + '</b>' + a.name;
+    b.style.visibility = 'hidden';
+    $('#labels').appendChild(b); labelEls[a.id] = b;
+  });
+
+  function buildWorld() {
+    var THREE = window.THREE;
+    var canvas = $('#gl');
+    var renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true, powerPreference: 'high-performance' });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    var scene = new THREE.Scene();
+    var camera = new THREE.PerspectiveCamera(40, 1, 0.5, 400);
+    var V3 = THREE.Vector3;
+    var TOP = 0.75;
+
+    /* ---- 光線 ---- */
+    var hemi = new THREE.HemisphereLight(0xffffff, 0x7fc6b8, 0.55); scene.add(hemi);
+    var sun = new THREE.DirectionalLight(0xfff1d6, 0.6);
+    sun.position.set(-20, 32, 18); sun.castShadow = true;
+    sun.shadow.mapSize.set(2048, 2048);
+    var sc = sun.shadow.camera; sc.left = -34; sc.right = 34; sc.top = 34; sc.bottom = -34; sc.near = 1; sc.far = 100;
+    sun.shadow.bias = -0.0006;
+    scene.add(sun); scene.add(sun.target);
+    scene.fog = new THREE.Fog(0xE9EEE6, 60, 175);
+
+    /* ---- 小工具 ---- */
+    var matCache = {};
+    function mat(c, e) {
+      var k = c + (e ? JSON.stringify(e) : '');
+      if (!matCache[k]) {
+        var o = { color: c, flatShading: true, roughness: 0.9, metalness: 0 };
+        if (e) for (var p in e) o[p] = e[p];
+        matCache[k] = new THREE.MeshStandardMaterial(o);
+      }
+      return matCache[k];
+    }
+    function put(parent, geo, m, x, y, z, rx, ry, rz) {
+      var o = new THREE.Mesh(geo, m);
+      o.position.set(x || 0, y || 0, z || 0);
+      if (rx) o.rotation.x = rx; if (ry) o.rotation.y = ry; if (rz) o.rotation.z = rz;
+      o.castShadow = true; o.receiveShadow = true;
+      parent.add(o); return o;
+    }
+    var Bx = function (w, h, d) { return new THREE.BoxGeometry(w, h, d); };
+    var Cy = function (rt, rb, h, s) { return new THREE.CylinderGeometry(rt, rb, h, s || 8); };
+    var Co = function (r, h, s) { return new THREE.ConeGeometry(r, h, s || 6); };
+    var Ic = function (r, d) { return new THREE.IcosahedronGeometry(r, d == null ? 1 : d); };
+    var Oc = function (r) { return new THREE.OctahedronGeometry(r); };
+    var Sp = function (r) { return new THREE.SphereGeometry(r, 10, 8); };
+    var To = function (r, t, rs, ts, arc) { return new THREE.TorusGeometry(r, t, rs || 6, ts || 14, arc); };
+    function prism(w, h, d) {
+      var s = new THREE.Shape(); s.moveTo(-w, 0); s.lineTo(w, 0); s.lineTo(0, h); s.lineTo(-w, 0);
+      var g = new THREE.ExtrudeGeometry(s, { depth: d, bevelEnabled: false }); g.translate(0, 0, -d / 2); return g;
+    }
+    function tri(w, h) {
+      var s = new THREE.Shape(); s.moveTo(0, 0); s.lineTo(w, 0); s.lineTo(0, h); s.lineTo(0, 0);
+      return new THREE.ShapeGeometry(s);
+    }
+    var C = { sand: 0xE4D6B0, sandD: 0xA39A84, grass: 0x9DC088, wood: 0x9A6B3C, woodD: 0x5E3F22, stone: 0xD9D3C4, cream: 0xFFF6DC, navy: 0x34567A, red: 0xE0594C, gold: 0xF2B705, pink: 0xFF7FA8 };
+    var goldM = mat(C.gold, { metalness: 0.5, roughness: 0.35, emissive: 0x6b4500, emissiveIntensity: 0.35 });
+    var lampMats = []; var nightLights = []; var ticks = [];
+    var DS = THREE.DoubleSide;
+
+    function palm(p, x, z, s) {
+      var g = new THREE.Group(); g.position.set(x, TOP, z); g.scale.setScalar(s || 1); g.rotation.y = (x * 7 + z * 3) % 6.28; p.add(g);
+      var pine = Math.abs(Math.round(x * 3 + z * 5)) % 2 === 0, i;
+      if (pine) {
+        put(g, Cy(0.1, 0.17, 1.4, 6), mat(C.woodD), 0, 0.7, 0, 0, 0, 0.07);
+        for (i = 0; i < 3; i++) put(g, Co(0.9 - i * 0.24, 0.75, 7), mat(i % 2 ? 0x2F6B4A : 0x3E8460), 0, 1.15 + i * 0.5, 0);
+      } else {
+        for (i = 0; i < 5; i++) {
+          var a = i * 1.26, bx = Math.cos(a) * 0.24, bz = Math.sin(a) * 0.24, h = 1.8 + (i % 3) * 0.45, lean = (i % 2 ? 1 : -1) * 0.06;
+          put(g, Cy(0.045, 0.055, h, 6), mat(i % 2 ? 0x6FAE5B : 0x84BE6A), bx, h / 2, bz, 0, 0, lean);
+          put(g, Co(0.17, 0.75, 4), mat(0x4F9A4A), bx, h, bz, 0, 0, 0.55); put(g, Co(0.15, 0.6, 4), mat(0x5DAA55), bx, h - 0.3, bz, 0, 0, -0.55);
+        }
+      }
+    }
+    function bush(p, x, z, s) {
+      var g = new THREE.Group(); g.position.set(x, TOP, z); g.scale.setScalar(s || 1); p.add(g);
+      put(g, Cy(0.07, 0.1, 0.6, 6), mat(C.wood), 0, 0.3, 0);
+      put(g, Ic(0.46, 1), mat(0x6DBA6A), 0, 0.9, 0);
+      put(g, Ic(0.3, 1), mat(0xE9A3B5), 0.28, 0.75, 0.12);
+    }
+    function rock(p, x, z, s, c) { put(p, new THREE.DodecahedronGeometry(0.3 * s, 0), mat(c || 0xA9ADA6), x, TOP + 0.08 * s, z, x * 3, z * 2, 0); }
+    function lamp(p, x, z) {
+      put(p, Cy(0.04, 0.05, 1.0, 6), mat(0x3b2a22), x, TOP + 0.5, z);
+      var m = mat(0xE0443A, { emissive: 0xFF7A3A, emissiveIntensity: 0 });
+      put(p, Sp(0.17), m, x, TOP + 1.1, z).scale.set(1, 1.25, 1); if (lampMats.indexOf(m) < 0) lampMats.push(m);
+      put(p, Cy(0.08, 0.08, 0.04, 6), goldM, x, TOP + 1.34, z); put(p, Cy(0.06, 0.06, 0.03, 6), goldM, x, TOP + 0.86, z);
+    }
+    function flagPole(p, x, z, col, h) {
+      h = h || 2.8;
+      put(p, Cy(0.04, 0.04, h, 6), mat(C.woodD), x, TOP + h / 2, z);
+      put(p, Bx(0.8, 0.05, 0.05), mat(C.woodD), x + 0.38, TOP + h - 0.05, z);
+      var f = put(p, Bx(0.6, 1.0, 0.03), mat(col), x + 0.4, TOP + h - 0.6, z); f.castShadow = false;
+      put(p, Bx(0.6, 0.08, 0.04), goldM, x + 0.4, TOP + h - 1.08, z);
+      put(p, Sp(0.08), goldM, x, TOP + h + 0.06, z);
+    }
+    function roof(p, w, y, col, rise) {
+      rise = rise || 0.5;
+      put(p, Co(w * 0.8, rise, 4), col, 0, y, 0, 0, Math.PI / 4, 0);
+      put(p, Bx(w * 1.12, 0.06, w * 1.12), mat(C.woodD), 0, y - rise / 2, 0);
+      for (var i = 0; i < 4; i++) { var an = i * Math.PI / 2; put(p, Sp(0.06), goldM, Math.cos(an) * w * 0.56, y - rise / 2 + 0.03, Math.sin(an) * w * 0.56); }
+    }
+    function pillar(p, x, y, z, h) { put(p, Cy(0.07, 0.07, h, 8), mat(0xB8332A), x, y, z); }
+
+    function person(o) {
+      var g = new THREE.Group(), skin = o.skin || 0xF2C9A0, hat = o.hat || 'swordsman', ink = mat(0x1d1a1a), eye = mat(0x222222);
+      put(g, Cy(0.12, 0.22, 0.44, 8), mat(o.coat), 0, 0.22, 0);
+      put(g, Cy(0.14, 0.13, 0.3, 8), mat(o.coat), 0, 0.58, 0);
+      put(g, To(0.135, 0.028, 5, 12), mat(o.sash || 0xB8332A), 0, 0.46, 0, Math.PI / 2);
+      put(g, Bx(0.09, 0.26, 0.09), mat(o.coat), -0.2, 0.52, 0, 0, 0, 0.35); put(g, Bx(0.09, 0.26, 0.09), mat(o.coat), 0.2, 0.52, 0, 0, 0, -0.35);
+      put(g, Ic(0.15, 1), mat(skin), 0, 0.84, 0);
+      put(g, Sp(0.017), eye, -0.055, 0.85, 0.14); put(g, Sp(0.017), eye, 0.055, 0.85, 0.14);
+      var cap = new THREE.SphereGeometry(0.17, 8, 6, 0, Math.PI * 2, 0, Math.PI / 2);
+      if (hat === 'swordsman') {
+        put(g, cap, ink, 0, 0.86, -0.01); put(g, Sp(0.07), ink, 0, 1.03, -0.03); put(g, To(0.165, 0.014, 4, 14), mat(0xF4F1E8), 0, 0.93, 0, Math.PI / 2 - 0.1);
+        put(g, Bx(0.035, 0.78, 0.03), mat(0xC9D3DA, { metalness: 0.5, roughness: 0.4 }), 0.02, 0.62, -0.17, 0, 0, 0.55);
+        put(g, Bx(0.06, 0.1, 0.05), goldM, -0.13, 0.9, -0.17, 0, 0, 0.55); put(g, Co(0.03, 0.2, 4), mat(0xB8332A), -0.18, 0.78, -0.17, 0, 0, 0.55);
+      } else if (hat === 'heroine') {
+        put(g, cap, ink, 0, 0.86, -0.01); put(g, Cy(0.03, 0.02, 0.34, 5), ink, 0, 0.78, -0.22, 0.5, 0, 0);
+        put(g, Sp(0.05), mat(0xB8332A), 0, 0.97, -0.12); put(g, Sp(0.035), goldM, 0.13, 0.98, 0.02);
+        put(g, Bx(0.035, 0.7, 0.03), mat(0xC9D3DA, { metalness: 0.5, roughness: 0.4 }), -0.18, 0.5, 0.12, 0, 0, 0.18);
+      } else if (hat === 'monk') {
+        put(g, To(0.15, 0.03, 5, 12), mat(0x6B3F22), 0, 0.68, 0.02, Math.PI / 2 - 0.2);
+        put(g, Sp(0.045), mat(0x6B3F22), 0, 0.57, 0.15); put(g, Cy(0.03, 0.03, 0.9, 5), mat(C.woodD), 0.3, 0.45, 0.05);
+        put(g, To(0.045, 0.012, 4, 8), goldM, 0.3, 0.92, 0.05);
+      } else if (hat === 'bamboohat') {
+        put(g, Co(0.36, 0.2, 10), mat(0xD9B86A), 0, 1.0, 0); put(g, Sp(0.03), mat(0xB8332A), 0, 1.11, 0);
+        put(g, Bx(0.05, 0.1, 0.05), mat(0x3b2a22), 0.18, 0.46, 0.12); put(g, Bx(0.04, 0.5, 0.07), mat(0xC9D3DA, { metalness: 0.5, roughness: 0.4 }), 0.2, 0.28, 0.12, 0, 0, 0.15);
+      } else if (hat === 'scholar') {
+        put(g, cap, ink, 0, 0.86, -0.01); put(g, Bx(0.24, 0.1, 0.22), mat(0x1d2a45), 0, 1.0, 0); put(g, Bx(0.05, 0.02, 0.2), mat(0x1d2a45), 0.14, 1.0, -0.2);
+        put(g, Cy(0.035, 0.035, 0.34, 6), mat(0xF4EAD0), 0.24, 0.52, 0.1, 0, 0, Math.PI / 2); put(g, To(0.037, 0.01, 4, 8), mat(0xB8332A), 0.24, 0.52, 0.1, 0, Math.PI / 2, 0);
+      } else if (hat === 'taoist' || hat === 'master') {
+        put(g, cap, mat(0xEDEDED), 0, 0.86, -0.01); put(g, Sp(0.065), mat(0xEDEDED), 0, 1.02, -0.02); put(g, Cy(0.012, 0.012, 0.3, 4), goldM, 0, 1.03, -0.02, 0, 0, Math.PI / 2);
+        put(g, Co(0.1, 0.3, 5), mat(0xF4F4F4), 0, 0.68, 0.11, Math.PI, 0, 0);
+        put(g, Co(0.025, 0.1, 4), mat(0xF4F4F4), 0.07, 0.94, 0.12, 0, 0, -0.5); put(g, Co(0.025, 0.1, 4), mat(0xF4F4F4), -0.07, 0.94, 0.12, 0, 0, 0.5);
+        if (hat === 'master') { put(g, Cy(0.025, 0.025, 1.4, 5), mat(C.woodD), 0.32, 0.7, 0.08); put(g, To(0.08, 0.02, 5, 10), goldM, 0.32, 1.42, 0.08); put(g, To(0.2, 0.03, 5, 14), goldM, 0, 0.5, 0, Math.PI / 2); }
+      }
+      g.scale.setScalar((o.scale || 1) * 1.45);
+      return g;
+    }
+
+    function ship(s) {
+      var g = new THREE.Group(), wd = mat(0x6F4A27);
+      put(g, Bx(1.8, 0.3, 0.7), wd, 0, 0.2, 0);
+      put(g, Co(0.35, 0.7, 4), wd, 1.2, 0.2, 0, 0, Math.PI / 4, -Math.PI / 2);
+      put(g, Bx(0.5, 0.3, 0.72), wd, -0.8, 0.42, 0);
+      put(g, Bx(1.84, 0.06, 0.74), goldM, 0, 0.36, 0);
+      put(g, Cy(0.045, 0.045, 1.9, 6), mat(C.woodD), 0.1, 1.15, 0);
+      put(g, new THREE.PlaneGeometry(0.95, 1.2), mat(0xB5452F, { side: DS }), 0.12, 1.2, 0, 0, Math.PI / 2, 0).castShadow = true;
+      for (var i = 0; i < 4; i++) put(g, Bx(0.02, 0.04, 0.97), mat(C.woodD), 0.12, 0.8 + i * 0.3, 0);
+      put(g, Cy(0.035, 0.035, 1.3, 6), mat(C.woodD), 0.85, 0.85, 0);
+      put(g, new THREE.PlaneGeometry(0.6, 0.7), mat(0xC25A3A, { side: DS }), 0.86, 0.9, 0, 0, Math.PI / 2, 0);
+      var lm = mat(0xE0443A, { emissive: 0xFF7A3A, emissiveIntensity: 0 }); if (lampMats.indexOf(lm) < 0) lampMats.push(lm);
+      put(g, Sp(0.09), lm, -0.85, 0.82, 0).scale.set(1, 1.2, 1);
+      var fl = put(g, tri(0.4, 0.22), mat(C.gold, { side: DS }), 0.1, 2.05, 0); fl.castShadow = false;
+      g.scale.setScalar(s || 1); return g;
+    }
+    function dinghy(s) {
+      var g = new THREE.Group(), wd = mat(0x6F4A27);
+      put(g, Bx(0.9, 0.16, 0.4), wd, 0, 0.1, 0);
+      put(g, Co(0.2, 0.4, 4), wd, 0.62, 0.1, 0, 0, Math.PI / 4, -Math.PI / 2);
+      put(g, Cy(0.02, 0.02, 0.4, 5), mat(C.woodD), -0.15, 0.35, 0.15); put(g, Cy(0.02, 0.02, 0.4, 5), mat(C.woodD), -0.15, 0.35, -0.15);
+      put(g, Bx(0.5, 0.05, 0.42), mat(0xC9B07A), -0.15, 0.56, 0);
+      put(g, Cy(0.015, 0.015, 0.9, 5), mat(C.woodD), -0.55, 0.3, 0, 0, 0, 0.5);
+      g.scale.setScalar(s || 1); return g;
+    }
+
+    /* ---- 各島主題 ---- */
+    var BUILD = {};
+    BUILD.gold = function (g) {
+      var c = new THREE.Group(); c.position.set(0, TOP, 0); g.add(c);
+      put(c, Bx(2.8, 0.2, 2.8), mat(C.stone), 0, 0.1, 0);
+      put(c, Bx(1.2, 0.12, 0.5), mat(C.stone), 0, 0.06, 1.6);
+      for (var t = 0; t < 3; t++) {
+        var w = 2.1 - 0.5 * t, y0 = 0.2 + t * 1.0;
+        put(c, Bx(w * 0.78, 0.6, w * 0.78), mat(C.cream), 0, y0 + 0.3, 0);
+        [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(function (q) { pillar(c, q[0] * w * 0.4, y0 + 0.3, q[1] * w * 0.4, 0.62); });
+        if (t === 0) put(c, Bx(0.32, 0.45, 0.05), mat(0xB8332A), 0, y0 + 0.25, w * 0.4 + 0.02);
+        roof(c, w, y0 + 0.88, goldM, 0.52);
+      }
+      put(c, Cy(0.03, 0.03, 0.55, 6), goldM, 0, 3.55, 0); put(c, Sp(0.1), goldM, 0, 3.85, 0);
+      var pl = new THREE.PointLight(0xFFC94D, 0.9, 10); pl.position.set(0, TOP + 1.6, 0.4); g.add(pl); nightLights.push(pl);
+      for (var i = 0; i < 9; i++) { var an = i * 2.4, rr = 2.0 + (i % 3) * 0.35; put(g, Cy(0.2, 0.2, 0.05, 12), goldM, Math.cos(an) * rr, TOP + 0.03 + (i % 2) * 0.05, Math.sin(an) * rr * 0.9, (i % 3) * 0.2); }
+      for (var lv = 0; lv < 3; lv++) for (var n = 0; n < 3 - lv; n++) put(g, Bx(0.72, 0.24, 0.4), goldM, -2.9 + (n - (2 - lv) / 2) * 0.78, TOP + 0.13 + lv * 0.25, 1.9);
+      flagPole(g, 2.7, -2.0, 0xB8332A, 3.3);
+      palm(g, -3.0, -1.9, 1.15); palm(g, 3.4, 1.7, 1.0); bush(g, -2.0, -3.1, 1); rock(g, 2.2, 3.0, 1.2); rock(g, -3.2, 2.4, 1);
+      lamp(g, -1.8, 2.2); lamp(g, 1.8, 2.2);
+      var sh = ship(1.5); sh.position.set(0, 0.05, 7.4); sh.rotation.y = 0.3; g.add(sh);
+      ticks.push(function (t) { sh.position.y = 0.05 + Math.sin(t * 1.3) * 0.08; sh.rotation.z = Math.sin(t * 1.1) * 0.04; });
+    };
+    BUILD.stock = function (g) {
+      var b = new THREE.Group(); b.position.set(-0.4, TOP, -0.2); g.add(b);
+      put(b, Bx(3.0, 0.2, 2.0), mat(C.stone), 0, 0.1, 0);
+      put(b, Bx(2.6, 1.0, 1.2), mat(C.cream), 0, 0.7, -0.2);
+      for (var i = 0; i < 5; i++) pillar(b, -1.1 + i * 0.55, 0.7, 0.62, 1.0);
+      put(b, Bx(2.8, 0.1, 1.8), mat(C.woodD), 0, 1.25, 0.05);
+      put(b, prism(1.0, 0.65, 3.1), mat(0x3F4650), 0, 1.3, 0, 0, Math.PI / 2, 0);
+      put(b, Bx(3.1, 0.07, 0.1), goldM, 0, 1.95, 0);
+      put(b, Bx(1.1, 0.3, 0.06), mat(0xB8332A), 0, 1.05, 0.7); put(b, Bx(1.18, 0.05, 0.08), goldM, 0, 1.22, 0.7); put(b, Bx(1.18, 0.05, 0.08), goldM, 0, 0.88, 0.7);
+      var hs = [0.5, 0.8, 1.15, 1.55, 2.05];
+      for (var k = 0; k < 5; k++) put(g, Bx(0.32, hs[k], 0.34), mat(k % 2 ? 0x57C58A : 0x7ED9A8), 1.4 + k * 0.42, TOP + hs[k] / 2, 1.55);
+      put(g, Co(0.3, 0.62, 4), mat(0x2FAE6B), 3.1, TOP + 2.35, 1.55, 0, Math.PI / 4);
+      palm(g, -3.0, -1.8, 1.05); palm(g, 2.9, -2.2, 1.0); bush(g, 3.0, -0.6, 0.9); rock(g, -3.0, 1.2, 1.1);
+      lamp(g, -2.2, 1.9); lamp(g, 2.0, -1.9);
+    };
+    BUILD.bond = function (g) {
+      var v = new THREE.Group(); v.position.set(-0.2, TOP, -0.5); g.add(v);
+      put(v, Bx(2.5, 1.0, 1.7), mat(0xB9B4A8), 0, 0.5, 0);
+      put(v, Bx(0.75, 0.75, 0.1), mat(0x2b2724), 0, 0.38, 0.88); put(v, Cy(0.375, 0.375, 0.1, 12, 1), mat(0x2b2724), 0, 0.75, 0.88, Math.PI / 2);
+      put(v, Bx(2.1, 0.7, 1.3), mat(C.cream), 0, 1.35, 0);
+      [-0.9, -0.3, 0.3, 0.9].forEach(function (x) { pillar(v, x, 1.35, 0.68, 0.7); });
+      put(v, prism(1.35, 0.6, 1.9), mat(0x3F4650), 0, 1.7, 0, 0, Math.PI / 2, 0);
+      put(v, Bx(0.8, 0.28, 0.06), goldM, 0, 1.05, 0.92);
+      put(v, Bx(1.9, 0.07, 0.1), goldM, 0, 2.3, 0);
+      var rows = [3, 2, 1];
+      for (var r = 0; r < 3; r++) for (var n = 0; n < rows[r]; n++) {
+        var x = 1.4 + (n - (rows[r] - 1) / 2) * 0.4, y = TOP + 0.17 + r * 0.32;
+        put(g, Cy(0.16, 0.16, 0.9, 10), mat(C.cream), x, y, 1.6, 0, 0, Math.PI / 2).rotation.y = 0.5;
+        put(g, To(0.165, 0.035, 5, 10), mat(0xB8332A), x, y, 1.6, 0, Math.PI / 2 + 0.5, 0);
+      }
+      var an = new THREE.Group(); an.position.set(-2.3, TOP, 1.3); g.add(an);
+      var am = mat(0x8A6A3A, { metalness: 0.5, roughness: 0.5 });
+      put(an, Cy(0.38, 0.3, 0.5, 10), am, 0, 0.55, 0); put(an, To(0.38, 0.05, 5, 12), am, 0, 0.8, 0, Math.PI / 2);
+      [0, 2.1, 4.2].forEach(function (a) { put(an, Cy(0.05, 0.04, 0.3, 5), am, Math.cos(a) * 0.22, 0.15, Math.sin(a) * 0.22); });
+      put(an, Bx(0.1, 0.22, 0.05), am, -0.45, 0.9, 0); put(an, Bx(0.1, 0.22, 0.05), am, 0.45, 0.9, 0);
+      put(an, Cy(0.03, 0.03, 0.4, 5), mat(0xB8332A), 0, 1.0, 0);
+      palm(g, 2.7, -2.0, 1.1); palm(g, -2.8, -1.8, 1.0); bush(g, 1.6, 2.9, 0.9); rock(g, -2.9, 0.1, 1);
+      lamp(g, 2.5, 0.4); lamp(g, -1.4, 2.6);
+    };
+    BUILD.property = function (g) {
+      var defs = [[-1.1, -1.0, 0xF4EDDA, 0x4A5560, 1.0, 1], [1.0, -1.2, 0xF8EFD0, 0x7A3E34, 1.1, 2], [1.8, 0.5, 0xEFE6D2, 0x4A5560, 0.95, 1], [-1.7, 0.8, 0xF2EAD8, 0x5B6B5A, 1.0, 1], [0.0, 0.6, 0xF8F1DC, 0x7A3E34, 1.25, 2]];
+      defs.forEach(function (d, i) {
+        var h = new THREE.Group(); h.position.set(d[0], TOP, d[1]); h.scale.setScalar(d[4]); h.rotation.y = (i - 2) * 0.3; g.add(h);
+        var fl = d[5];
+        put(h, Bx(0.95, 0.7 * fl, 0.85), mat(d[2]), 0, 0.35 * fl, 0);
+        [-1, 1].forEach(function (s) { pillar(h, s * 0.46, 0.3 * fl, 0.43, 0.6 * fl); });
+        roof(h, 1.05, 0.7 * fl + 0.27, mat(d[3]), 0.55);
+        put(h, Bx(0.2, 0.34, 0.05), mat(0xB8332A), 0, 0.17, 0.44);
+        var wm = mat(0xFFF1B8, { emissive: 0xFFD27A, emissiveIntensity: 0 }); if (lampMats.indexOf(wm) < 0) lampMats.push(wm);
+        put(h, Bx(0.2, 0.2, 0.05), wm, -0.28, 0.4 * fl, 0.44); put(h, Bx(0.2, 0.2, 0.05), wm, 0.28, 0.4 * fl, 0.44);
+      });
+      var sg = new THREE.Group(); sg.position.set(2.8, TOP, 1.9); sg.rotation.y = -0.6; g.add(sg);
+      put(sg, Cy(0.04, 0.04, 1.4, 6), mat(C.woodD), 0, 0.7, 0); put(sg, Bx(0.4, 0.8, 0.04), mat(0xB8332A), 0.22, 1.0, 0); put(sg, Bx(0.4, 0.05, 0.05), goldM, 0.22, 0.58, 0);
+      palm(g, -2.9, -1.9, 1.0); bush(g, 2.9, -2.1, 0.95); bush(g, -3.0, 0.3, 0.8); rock(g, 0.6, 2.9, 1);
+      lamp(g, -0.9, 2.1); lamp(g, 2.3, -0.3);
+    };
+    BUILD.options = function (g) {
+      var h = new THREE.Group(); h.position.set(-0.2, TOP, -0.2); g.add(h);
+      var wd = mat(C.wood);
+      put(h, Cy(0.85, 0.85, 0.15, 12), wd, 0, 0.08, 0); put(h, Cy(0.85, 0.85, 0.15, 12), wd, 0, 2.5, 0);
+      for (var i = 0; i < 3; i++) { var an = i * 2.094 + 0.5; put(h, Cy(0.05, 0.05, 2.4, 6), mat(C.woodD), Math.cos(an) * 0.72, 1.3, Math.sin(an) * 0.72); }
+      var gl = mat(0xD8CBF6, { transparent: true, opacity: 0.5 });
+      put(h, Co(0.66, 1.1, 12), gl, 0, 1.85, 0, Math.PI); put(h, Co(0.66, 1.1, 12), gl, 0, 0.75, 0);
+      put(h, Co(0.5, 0.6, 12), mat(0xF2C94C), 0, 0.4, 0); put(h, Co(0.3, 0.4, 10), mat(0xF2C94C), 0, 2.2, 0, Math.PI);
+      var cr = [[-1.7, 1.0, 0.5], [-1.4, -1.2, 0.4], [1.8, -0.8, 0.45], [1.3, 1.4, 0.35], [2.2, 0.6, 0.3]];
+      cr.forEach(function (c, i) { var col = i % 2 ? 0xC6B3F0 : 0xE0C9FF; var m = put(g, Oc(c[2]), mat(col, { emissive: col, emissiveIntensity: 0.35 }), c[0], TOP + c[2] * 1.4, c[1], 0, i, 0); m.scale.y = 2.1; });
+      var d1 = put(g, Bx(0.5, 0.5, 0.5), mat(0xB9A1EE), 1.0, TOP + 0.25, 2.1, 0, 0.5, 0);
+      [[-0.1, -0.1], [0.1, 0.1]].forEach(function (p) { put(g, Sp(0.045), mat(0x2a2140), 1.0 + p[0], TOP + 0.52, 2.1 + p[1]); });
+      put(g, Bx(0.42, 0.42, 0.42), mat(0xE3D5F6), 1.7, TOP + 0.21, 2.6, 0, 0.9, 0);
+      palm(g, -2.6, 1.9, 1.0); palm(g, 2.7, -1.9, 0.95); rock(g, -0.4, 2.8, 1.2);
+      lamp(g, -2.2, -1.9);
+    };
+    BUILD.crypto = function (g) {
+      put(g, Cy(0.95, 1.15, 0.5, 6), mat(0xCFC9BC), 0, TOP + 0.25, 0);
+      put(g, To(0.8, 0.06, 6, 20), mat(0x9fb3bf), 0, TOP + 0.52, 0, Math.PI / 2);
+      var cy = new THREE.Group(); cy.position.set(0, TOP + 2.3, 0); g.add(cy);
+      var cm = mat(0x7EE8F0, { emissive: 0x31C9D8, emissiveIntensity: 0.55, transparent: true, opacity: 0.92 });
+      var cr = put(cy, Oc(0.85), cm, 0, 0, 0); cr.scale.y = 1.55;
+      put(cy, Oc(0.38), mat(0xE9FFFF, { emissive: 0xBFFFFF, emissiveIntensity: 0.6 }), 0, 0, 0).scale.y = 1.5;
+      var orb = new THREE.Group(); cy.add(orb); orb.rotation.x = 0.4;
+      put(orb, To(1.35, 0.04, 6, 36), mat(0xDDE6EC), 0, 0, 0, Math.PI / 2);
+      for (var i = 0; i < 6; i++) { var a = i * Math.PI / 3; put(orb, Cy(0.22, 0.22, 0.06, 14), goldM, Math.cos(a) * 1.35, 0, Math.sin(a) * 1.35, Math.PI / 2 * (i % 2), a, 0); }
+      ticks.push(function (t, dt) { cr.rotation.y += dt * 0.9; orb.rotation.y += dt * 0.7; cy.position.y = TOP + 2.3 + Math.sin(t * 1.5) * 0.14; });
+      var sm = new THREE.Group(); sm.position.set(1.7, TOP + 3.5, -0.6); g.add(sm);
+      var gm = mat(0x7C8794, { emissive: 0x2c3340, emissiveIntensity: 0.2 });
+      put(sm, Ic(0.55, 1), gm, 0, 0, 0); put(sm, Ic(0.45, 1), gm, 0.5, -0.05, 0.1); put(sm, Ic(0.42, 1), gm, -0.45, -0.1, 0);
+      var bolt = new THREE.Shape(); bolt.moveTo(0, 0); bolt.lineTo(0.22, 0); bolt.lineTo(0.08, -0.38); bolt.lineTo(0.3, -0.38); bolt.lineTo(-0.1, -1.0); bolt.lineTo(0.0, -0.55); bolt.lineTo(-0.2, -0.55); bolt.lineTo(0, 0);
+      var bm = new THREE.Mesh(new THREE.ShapeGeometry(bolt), new THREE.MeshBasicMaterial({ color: 0xFFE14D, side: DS })); bm.position.set(0, -0.35, 0.45); sm.add(bm);
+      ticks.push(function (t) { bm.visible = (Math.sin(t * 5) > 0.2) || (Math.sin(t * 13) > 0.85); sm.position.y = TOP + 3.5 + Math.sin(t * 1.1) * 0.1; });
+      palm(g, -2.3, 1.5, 1.0); palm(g, 2.4, 1.6, 0.9); rock(g, -2.2, -1.6, 1.1); rock(g, 0.9, 2.6, 0.9);
+      lamp(g, 1.6, -2.0);
+    };
+    BUILD.futures = function (g) {
+      var fu = put(g, prism(0.5, 0.65, 0.7), mat(0xE6DCC6), 0, TOP, 0);
+      var pk = new THREE.Group(); pk.position.set(0, TOP + 0.66, 0); g.add(pk);
+      put(pk, Bx(3.6, 0.13, 0.55), mat(C.wood), 0, 0, 0);
+      var crate = new THREE.Group(); crate.position.set(1.35, 0.4, 0); pk.add(crate);
+      put(crate, Bx(0.62, 0.62, 0.62), mat(0xB07A45), 0, 0, 0); put(crate, Bx(0.66, 0.1, 0.66), goldM, 0, 0.18, 0); put(crate, Bx(0.66, 0.1, 0.66), goldM, 0, -0.18, 0);
+      var rider = person({ coat: 0xC9473B, hat: 'heroine', scale: 0.75 }); rider.position.set(-1.3, 0.07, 0); rider.rotation.y = Math.PI / 2; pk.add(rider);
+      ticks.push(function (t) { pk.rotation.z = reduce ? 0.2 : 0.2 + Math.sin(t * 1.2) * 0.08; });
+      var cn = new THREE.Group(); cn.position.set(1.7, TOP, 1.8); cn.rotation.y = -0.7; g.add(cn);
+      var wd = mat(C.woodD);
+      put(cn, Cy(0.05, 0.05, 1.3, 6), wd, -0.7, 0.65, 0); put(cn, Cy(0.05, 0.05, 1.3, 6), wd, 0.7, 0.65, 0);
+      put(cn, Bx(1.55, 0.07, 0.09), wd, 0, 1.2, 0); put(cn, Bx(1.55, 0.07, 0.09), wd, 0, 0.45, 0); put(cn, Bx(1.7, 0.1, 0.5), wd, 0, 0.05, 0);
+      for (var s = 0; s < 4; s++) { var sx = -0.5 + s * 0.33; put(cn, Cy(0.014, 0.014, 1.5, 4), wd, sx, 0.8, 0.05, 0, 0, (s - 1.5) * 0.04); put(cn, Co(0.045, 0.16, 4), mat(0xC9D3DA, { metalness: 0.5, roughness: 0.4 }), sx + (s - 1.5) * 0.03, 1.62, 0.05, 0, 0, (s - 1.5) * 0.04); }
+      put(cn, Bx(0.06, 0.7, 0.025), mat(0xC9D3DA, { metalness: 0.5, roughness: 0.4 }), 0.55, 0.78, 0.15);
+      for (var i = 0; i < 3; i++) put(g, Sp(0.14), mat(0x8F8B82), 0.6 + i * 0.28, TOP + 0.14, 2.9 - (i % 2) * 0.2);
+      for (var j = 0; j < 4; j++) { var col = [0xB8332A, C.gold, 0x2F4F7F, 0x4E9C7A][j]; put(g, Co(0.14, 0.4, 4), mat(col), -2.6 + j * 0.45, TOP + 0.2, 2.0 + (j % 2) * 0.3); }
+      palm(g, -2.7, -1.5, 1.05); palm(g, 2.8, -1.7, 1.0); rock(g, -2.4, 1.0, 1.1); bush(g, 0.4, -2.6, 0.9);
+      lamp(g, -1.4, -2.0);
+    };
+
+    /* ---- 建島 ---- */
+    var islands = {}, pickMeshes = [], foams = [], crews = [];
+    var crewColors = [0xF4F1E8, 0xC9473B, 0x2F4F7F, 0xE0A030, 0x4E9C7A, 0x6B7280];
+    ASSETS.forEach(function (a, idx) {
+      var g = new THREE.Group(); g.position.set(a.pos[0], 0, a.pos[1]); scene.add(g);
+      var R = a.R;
+      put(g, Cy(R * 0.98, R * 0.55, 2.4, 8), mat(C.sandD), 0, -0.55, 0);
+      put(g, Cy(R * 1.02, R * 1.0, 0.55, 8), mat(C.sand), 0, 0.33, 0);
+      put(g, Cy(R * 0.84, R * 0.9, 0.16, 8), mat(C.grass), 0, 0.67, 0);
+      var foam = new THREE.Mesh(new THREE.RingGeometry(R * 1.02, R * 1.3, 32), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.5, depthWrite: false, side: DS }));
+      foam.rotation.x = -Math.PI / 2; foam.position.y = 0.24; foam.renderOrder = 2; g.add(foam); foams.push(foam);
+      BUILD[a.id](g, a);
+      var da = a.dock, dx = Math.cos(da), dz = Math.sin(da);
+      var dk = new THREE.Group(); dk.position.set(dx * (R * 1.0 + 0.6), 0.3, dz * (R * 1.0 + 0.6)); dk.rotation.y = -da + Math.PI / 2; g.add(dk);
+      put(dk, Bx(0.8, 0.1, 2.4), mat(C.wood), 0, 0, 0);
+      put(dk, Cy(0.07, 0.07, 0.8, 6), mat(C.woodD), -0.4, -0.1, 1.1); put(dk, Cy(0.07, 0.07, 0.8, 6), mat(C.woodD), 0.4, -0.1, 1.1);
+      var bt = dinghy(1.1); bt.position.set(dx * (R + 2.7), 0.04, dz * (R + 2.7)); bt.rotation.y = -da + Math.PI / 2 + Math.PI / 2; g.add(bt);
+      ticks.push((function (b, k) { return function (t) { b.position.y = 0.04 + Math.sin(t * 1.4 + k) * 0.06; }; })(bt, idx));
+      var rl = new THREE.Mesh(Cy(R * 1.15, R * 1.15, 5, 10), new THREE.MeshBasicMaterial({ visible: false })); rl.position.y = 2; rl.userData.id = a.id; rl.visible = false; g.add(rl); pickMeshes.push(rl);
+      var n = a.id === 'gold' ? 4 : 3;
+      for (var k = 0; k < n; k++) {
+        var hats = ['swordsman', 'heroine', 'bamboohat', 'scholar', 'monk', 'taoist'];
+        var p = person({ coat: crewColors[(idx + k * 2) % crewColors.length], hat: hats[(idx + k * 2) % 6], skin: [0xF2C9A0, 0xE0AC7E, 0xC98E63, 0xF6D5B5][(idx + k) % 4] });
+        g.add(p);
+        crews.push({ g: p, cx: 0, cz: 0, r: R * (0.62 + (k % 2) * 0.08), ang: k * 2.1 + idx, sp: (0.16 + k * 0.03) * (k % 2 ? -1 : 1), host: g });
+      }
+      if (a.id === 'gold') { var cp = person({ coat: 0x5B6B8A, hat: 'master', scale: 1.15 }); cp.position.set(-1.6, TOP, 2.9); cp.rotation.y = 0.5; g.add(cp); ticks.push(function (t) { cp.position.y = TOP + Math.abs(Math.sin(t * 2)) * 0.05; cp.rotation.y = 0.5 + Math.sin(t * 0.6) * 0.35; }); }
+      var anchors = [];
+      for (var h = 0; h < 6; h++) { var an = h * Math.PI / 3 + 0.35; anchors.push(new V3(Math.cos(an) * R * 0.52, TOP + 1.7 + (h % 2) * 0.9 + (a.id === 'gold' ? 0.5 : 0), Math.sin(an) * R * 0.52)); }
+      islands[a.id] = { g: g, a: a, anchors: anchors, label: new V3(a.pos[0], TOP + (a.id === 'gold' ? 4.2 : 3.6), a.pos[1]) };
+    });
+
+    /* ---- 航線與帆船 ---- */
+    var dotGeo = new THREE.SphereGeometry(0.1, 6, 5);
+    var dotOff = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.6 });
+    var dotOn = new THREE.MeshBasicMaterial({ color: 0xF2B705 });
+    var routes = [];
+    LINKS.forEach(function (l, i) {
+      var A = islands[l[0]], B = islands[l[1]];
+      var ax = A.a.pos[0], az = A.a.pos[1], bx = B.a.pos[0], bz = B.a.pos[1];
+      var dx = bx - ax, dz = bz - az, len = Math.sqrt(dx * dx + dz * dz), ux = dx / len, uz = dz / len;
+      var s = new V3(ax + ux * A.a.R * 1.55, 0.2, az + uz * A.a.R * 1.55), e = new V3(bx - ux * B.a.R * 1.55, 0.2, bz - uz * B.a.R * 1.55);
+      var mid = new V3((s.x + e.x) / 2 - uz * len * 0.16, 0.2, (s.z + e.z) / 2 + ux * len * 0.16);
+      var curve = new THREE.QuadraticBezierCurve3(s, mid, e);
+      var dots = [], n = Math.max(10, Math.round(len * 0.9));
+      for (var k = 0; k < n; k++) { var d = new THREE.Mesh(dotGeo, dotOff); d.position.copy(curve.getPoint(k / (n - 1))); scene.add(d); dots.push(d); }
+      var sh = ship(0.62); scene.add(sh);
+      routes.push({ a: l[0], b: l[1], curve: curve, dots: dots, ship: sh, off: i * 0.19, sp: 0.022 + (i % 3) * 0.004 });
+    });
+
+    /* ---- 海面 ---- */
+    var wg = new THREE.PlaneGeometry(300, 300, 70, 70); wg.rotateX(-Math.PI / 2);
+    var wp = wg.attributes.position, wbx = [], wbz = [];
+    for (var wi = 0; wi < wp.count; wi++) { wbx.push(wp.getX(wi)); wbz.push(wp.getZ(wi)); }
+    var waterMat = new THREE.MeshStandardMaterial({ color: 0x4B9E9A, flatShading: true, roughness: 0.35, metalness: 0.05 });
+    var water = new THREE.Mesh(wg, waterMat); water.receiveShadow = true; scene.add(water);
+
+    /* ---- 遠景山丘、前景海灘、雲、鯨魚、星 ---- */
+    var hillCols = [0xA9B8B0, 0x9DB0A8, 0xB4C2B6, 0x8FA39A, 0xC0CCC0];
+    var hills = [];
+    for (var hi = 0; hi < 16; hi++) {
+      var hx = (hi / 15 - 0.5) * 190, hz = -78 - (hi % 3) * 9, sx = 8 + (hi * 7 % 6), sy = 14 + (hi * 5 % 14), sz = 8 + (hi * 3 % 5);
+      var hl = put(scene, Ic(1, 1), mat(hillCols[hi % 5]), hx, 0, hz); hl.scale.set(sx, sy, sz); hl.castShadow = false; hills.push([hx, hz, sx, sy, sz]);
+    }
+    [[-96, -10], [-98, 24], [96, -20], [100, 14]].forEach(function (p, i) { var hl = put(scene, Ic(1, 1), mat(hillCols[i % 5]), p[0], 0, p[1]); hl.scale.set(9, 14 + i * 2, 10); hl.castShadow = false; hills.push([p[0], p[1], 9, 14 + i * 2, 10]); });
+    var treeCount = hills.length * 12;
+    var tIM = new THREE.InstancedMesh(new THREE.ConeGeometry(0.7, 2.2, 5), new THREE.MeshStandardMaterial({ color: 0x2F6B4A, flatShading: true, roughness: 0.9 }), treeCount);
+    var dm = new THREE.Object3D(), ti = 0;
+    hills.forEach(function (h, i) {
+      for (var k = 0; k < 12; k++) {
+        var u = ((i * 13 + k * 7) % 17) / 17 * 2 - 1, v = ((i * 5 + k * 11) % 19) / 19 * 2 - 1;
+        var rr = Math.min(0.85, Math.sqrt(u * u + v * v)), yy = Math.sqrt(Math.max(0, 1 - rr * rr)) * h[3];
+        dm.position.set(h[0] + u * h[2] * 0.8, yy * 0.95, h[1] + v * h[4] * 0.8); var sc2 = 0.9 + ((i + k) % 5) * 0.25; dm.scale.set(sc2, sc2, sc2); dm.updateMatrix(); tIM.setMatrixAt(ti++, dm.matrix);
+      }
+    });
+    scene.add(tIM);
+    var shore = new THREE.Group(); shore.position.set(30, 0, 26); scene.add(shore);
+    put(shore, Cy(13, 8, 3, 8), mat(C.sandD), 0, -0.9, 0); put(shore, Cy(13.4, 13, 0.7, 8), mat(C.sand), 0, 0.3, 0); put(shore, Cy(11.2, 11.8, 0.2, 8), mat(C.grass), 0, 0.68, 0);
+    (function(){var pv=new THREE.Group();pv.position.set(2,0.78,-1);shore.add(pv);
+      [[-1,-1],[1,-1],[-1,1],[1,1]].forEach(function(q){pillar(pv,q[0]*1.3,1.2,q[1]*1.3,2.4);});
+      put(pv,Bx(3.2,0.15,3.2),mat(C.stone),0,0.05,0);roof(pv,3.6,2.8,mat(0x3F4650),1.1);put(pv,Sp(0.14),goldM,0,3.4,0);})();
+    palm(shore, -4, -3, 1.5); palm(shore, -1, -6, 1.3); palm(shore, -7, 1, 1.2); rock(shore, -2, 2, 2.2); rock(shore, -5, -1, 1.6);
+    var clouds = [];
+    for (var ci = 0; ci < 9; ci++) {
+      var cg = new THREE.Group(); cg.position.set(-80 + ci * 20, 24 + (ci % 3) * 3, -72 + (ci * 13 % 30));
+      var cmat = new THREE.MeshStandardMaterial({ color: 0xffffff, flatShading: true, roughness: 1, emissive: 0xffffff, emissiveIntensity: 0.3 });
+      [[0, 0, 0, 2.4], [2.4, -0.3, 0.3, 1.8], [-2.3, -0.4, 0, 1.7], [0.6, 0.6, 0.4, 1.6]].forEach(function (b) { var m = put(cg, Ic(b[3], 1), cmat, b[0], b[1], b[2]); m.scale.y = 0.62; m.castShadow = false; m.receiveShadow = false; });
+      scene.add(cg); clouds.push({ g: cg, m: cmat, sp: 0.4 + (ci % 4) * 0.15 });
+    }
+    var whale = new THREE.Group(); whale.position.set(-22, 0, 14); whale.rotation.y = 0.6; scene.add(whale);
+    var wm = mat(0xF08A4B);
+    put(whale, Ic(1.4, 1), wm, 0, 0, 0).scale.set(1.9, 0.95, 1.0);
+    put(whale, Ic(0.9, 1), mat(0xFFF3E0), 0.2, -0.35, 0).scale.set(1.8, 0.6, 0.95);
+    var tail = put(whale, Co(0.7, 1.4, 4), wm, -2.9, 0.5, 0, 0, 0, 1.0); tail.scale.z = 0.35;
+    put(whale, Sp(0.12), mat(0x1B2A29), 2.1, 0.25, 0.85); put(whale, Sp(0.12), mat(0x1B2A29), 2.1, 0.25, -0.85);
+    var spout = put(whale, Co(0.12, 0.8, 5), mat(0xffffff, { transparent: true, opacity: 0.8 }), 0.4, 1.7, 0);
+    ticks.push(function (t) { whale.position.y = -0.35 + Math.sin(t * 0.9) * 0.18; tail.rotation.z = 1.0 + Math.sin(t * 1.8) * 0.12; spout.scale.y = 0.6 + Math.max(0, Math.sin(t * 1.5)) * 0.9; });
+    var starGeo = new THREE.BufferGeometry(), sp = [];
+    for (var si = 0; si < 320; si++) { var th = Math.random() * Math.PI * 2, ph = Math.random() * 1.2 + 0.1, rs = 170; sp.push(Math.cos(th) * Math.sin(ph) * rs, Math.cos(ph) * rs * 0.55 + 10, Math.sin(th) * Math.sin(ph) * rs - 60); }
+    starGeo.setAttribute('position', new THREE.Float32BufferAttribute(sp, 3));
+    var stars = new THREE.Points(starGeo, new THREE.PointsMaterial({ color: 0xffffff, size: 1.6, sizeAttenuation: false, fog: false })); stars.visible = false; scene.add(stars);
+
+    /* ---- 日夜 ---- */
+    var night = false;
+    function applyNight(n) {
+      night = n;
+      hemi.intensity = n ? 0.3 : 0.55; hemi.color.setHex(n ? 0x6f87c9 : 0xffffff); hemi.groundColor.setHex(n ? 0x1a3550 : 0x7fc6b8);
+      sun.intensity = n ? 0.22 : 0.6; sun.color.setHex(n ? 0x9fb4ff : 0xfff1d6);
+      waterMat.color.setHex(n ? 0x0B3B4A : 0x4B9E9A);
+      scene.fog.color.setHex(n ? 0x17324A : 0xE9EEE6);
+      stars.visible = n;
+      lampMats.forEach(function (m) { m.emissiveIntensity = n ? 1.7 : 0; });
+      nightLights.forEach(function (l) { l.intensity = n ? 1.8 : 0.9; });
+      clouds.forEach(function (c) { c.m.emissive.setHex(n ? 0x6e86b8 : 0xffffff); c.m.emissiveIntensity = n ? 0.16 : 0.3; c.m.color.setHex(n ? 0x8fa3cf : 0xffffff); });
+      $('#bTimeT').textContent = n ? '白天' : '夜晚';
+    }
+    applyNight(isNight());
+    try { new MutationObserver(function () { applyNight(isNight()); }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] }); } catch (e) {}
+    try { matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function () { applyNight(isNight()); }); } catch (e) {}
+
+    /* ---- 鏡頭 ---- */
+    var stage = $('#stage'), W = 1, H = 1, portrait = false;
+    var cam = { az: 0.42, el: 0.9, r: 36, fx: 0, fz: 0, fs: 0, ls: 0 };
+    var goal = { az: 0.42, el: 0.9, r: 36, fx: 0, fz: 0, fs: 0, ls: 0 };
+    var mode = 'home';
+    function homeR() { var asp = W / H; return asp < 0.8 ? 78 : asp < 1.25 ? 58 : 46; }
+    function resize() {
+      W = Math.max(1, stage.clientWidth); H = Math.max(1, stage.clientHeight);
+      portrait = W < 900;
+      renderer.setSize(W, H, false);
+      camera.aspect = W / H; camera.fov = (W / H) < 0.9 ? 52 : 40; camera.updateProjectionMatrix();
+      if (mode === 'home') goal.r = homeR();
+    }
+    window.addEventListener('resize', resize);
+    try { new ResizeObserver(resize).observe(stage); } catch (e) {}
+    resize(); cam.r = goal.r = homeR(); cam.fs = goal.fs = portrait ? 2 : 3.5;
+    function focus(a) {
+      mode = 'island'; goal.fx = a.pos[0]; goal.fz = a.pos[1]; goal.r = portrait ? 16 : 12.5; goal.el = 0.78;
+      goal.fs = portrait ? 4.4 : 0; goal.ls = portrait ? 0 : 3.9;
+      setHotspots(a);
+    }
+    function home() { mode = 'home'; goal.fx = 0; goal.fz = 0; goal.fs = portrait ? 2 : 3.5; goal.ls = 0; goal.r = homeR(); goal.el = 0.9; clearHotspots(); }
+
+    /* ---- 熱點與標籤 ---- */
+    var hotEls = [], hotId = null;
+    function clearHotspots() { hotEls.forEach(function (h) { h.el.remove(); }); hotEls = []; hotId = null; }
+    function setHotspots(a) {
+      clearHotspots(); hotId = a.id;
+      islands[a.id].anchors.forEach(function (p, i) {
+        var b = document.createElement('button'); b.className = 'hs' + (i === 0 ? ' on' : ''); b.innerHTML = '<span class="n">' + (i + 1) + '</span><span class="t">' + HOTL[i] + '</span>';
+        b.style.visibility = 'hidden';
+        b.addEventListener('click', function (e) { e.stopPropagation(); openSection(i); });
+        $('#labels').appendChild(b); hotEls.push({ el: b, p: p, host: islands[a.id].g });
+      });
+    }
+    var tmp = new V3();
+    function place(el, v, hide) {
+      tmp.copy(v).project(camera);
+      var x = (tmp.x * 0.5 + 0.5) * W, y = (-tmp.y * 0.5 + 0.5) * H;
+      var vis = tmp.z < 1 && x > -60 && x < W + 60 && y > -40 && y < H + 40 && !hide;
+      el.style.visibility = vis ? 'visible' : 'hidden';
+      if (vis) el.style.transform = 'translate3d(' + Math.round(x) + 'px,' + Math.round(y) + 'px,0) translate(-50%,-50%)';
+    }
+    var wv = new V3();
+    function updateLabels() {
+      ASSETS.forEach(function (a) { place(labelEls[a.id], islands[a.id].label, false); });
+      hotEls.forEach(function (h) { wv.copy(h.p).add(h.host.position); place(h.el, wv, false); });
+    }
+
+    /* ---- 指標操作 ---- */
+    var ptrs = {}, nptr = 0, down = null, pinch0 = 0;
+    var ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
+    function clampR() { var lo = mode === 'home' ? 16 : 6.5, hi = mode === 'home' ? 96 : 26; goal.r = Math.max(lo, Math.min(hi, goal.r)); }
+    canvas.addEventListener('pointerdown', function (e) {
+      canvas.setPointerCapture(e.pointerId); ptrs[e.pointerId] = { x: e.clientX, y: e.clientY }; nptr++;
+      down = { x: e.clientX, y: e.clientY, t: performance.now(), moved: 0 };
+      if (nptr === 2) { var k = Object.keys(ptrs).map(function (i) { return ptrs[i]; }); pinch0 = Math.hypot(k[0].x - k[1].x, k[0].y - k[1].y); }
+      canvas.classList.add('drag');
+    });
+    canvas.addEventListener('pointermove', function (e) {
+      var p = ptrs[e.pointerId]; if (!p) return;
+      var dx = e.clientX - p.x, dy = e.clientY - p.y; p.x = e.clientX; p.y = e.clientY;
+      if (down) down.moved += Math.abs(dx) + Math.abs(dy);
+      if (nptr === 1) { goal.az -= dx * 0.0062; goal.el = Math.max(0.32, Math.min(1.25, goal.el + dy * 0.0042)); }
+      else if (nptr === 2) { var k = Object.keys(ptrs).map(function (i) { return ptrs[i]; }); var d = Math.hypot(k[0].x - k[1].x, k[0].y - k[1].y); if (pinch0 > 0) { goal.r *= pinch0 / d; clampR(); } pinch0 = d; }
+    });
+    function endPtr(e) {
+      if (!ptrs[e.pointerId]) return;
+      delete ptrs[e.pointerId]; nptr = Math.max(0, nptr - 1);
+      if (nptr === 0) canvas.classList.remove('drag');
+      if (down && nptr === 0 && down.moved < 7 && performance.now() - down.t < 380) {
+        var rc = canvas.getBoundingClientRect(); ndc.set(((e.clientX - rc.left) / rc.width) * 2 - 1, -((e.clientY - rc.top) / rc.height) * 2 + 1);
+        ray.setFromCamera(ndc, camera); var hit = ray.intersectObjects(pickMeshes, false);
+        if (hit.length) select(hit[0].object.userData.id);
+      }
+      if (nptr === 0) down = null;
+    }
+    canvas.addEventListener('pointerup', endPtr); canvas.addEventListener('pointercancel', endPtr);
+    canvas.addEventListener('wheel', function (e) { e.preventDefault(); goal.r *= 1 + Math.max(-60, Math.min(60, e.deltaY)) * 0.0014; clampR(); }, { passive: false });
+    var hoverT = 0;
+    canvas.addEventListener('pointermove', function (e) {
+      if (nptr > 0 || performance.now() - hoverT < 90) return; hoverT = performance.now();
+      var rc = canvas.getBoundingClientRect(); ndc.set(((e.clientX - rc.left) / rc.width) * 2 - 1, -((e.clientY - rc.top) / rc.height) * 2 + 1);
+      ray.setFromCamera(ndc, camera); canvas.style.cursor = ray.intersectObjects(pickMeshes, false).length ? 'pointer' : '';
+    });
+
+    /* ---- 主迴圈 ---- */
+    var clock = new THREE.Clock(), first = true, wacc = 0, tgt = new V3();
+    function frame() {
+      requestAnimationFrame(frame);
+      var dt = Math.min(clock.getDelta(), 0.05), t = clock.elapsedTime;
+      var k = reduce ? 1 : 1 - Math.exp(-dt * 4.2);
+      cam.az += (goal.az - cam.az) * k; cam.el += (goal.el - cam.el) * k; cam.r += (goal.r - cam.r) * k;
+      cam.fx += (goal.fx - cam.fx) * k; cam.fz += (goal.fz - cam.fz) * k; cam.fs += (goal.fs - cam.fs) * k; cam.ls += (goal.ls - cam.ls) * k;
+      var sa = Math.sin(cam.az), ca = Math.cos(cam.az);
+      tgt.set(cam.fx + sa * cam.fs - ca * cam.ls, 0.7, cam.fz + ca * cam.fs + sa * cam.ls);
+      camera.position.set(tgt.x + cam.r * Math.cos(cam.el) * sa, cam.r * Math.sin(cam.el) + 0.3, tgt.z + cam.r * Math.cos(cam.el) * ca);
+      camera.lookAt(tgt);
+      if (!reduce) {
+        wacc += dt;
+        if (wacc > 0.033) {
+          wacc = 0;
+          for (var i = 0; i < wp.count; i++) { var x = wbx[i], z = wbz[i]; wp.setY(i, Math.sin(x * 0.25 + t * 1.1) * 0.09 + Math.cos(z * 0.3 + t * 0.9) * 0.09 + Math.sin((x + z) * 0.12 + t * 0.6) * 0.07); }
+          wp.needsUpdate = true;
+        }
+        for (var f = 0; f < foams.length; f++) { var s2 = 1 + Math.sin(t * 1.5 + f) * 0.025; foams[f].scale.set(s2, s2, 1); }
+        for (var c = 0; c < crews.length; c++) {
+          var cr = crews[c]; cr.ang += cr.sp * dt;
+          var cs = Math.cos(cr.ang), sn = Math.sin(cr.ang), dir = cr.sp > 0 ? 1 : -1;
+          cr.g.position.set(cs * cr.r, TOP + Math.abs(Math.sin(cr.ang * 22)) * 0.05, sn * cr.r);
+          cr.g.rotation.y = Math.atan2(-sn * dir, cs * dir);
+        }
+        for (var q = 0; q < clouds.length; q++) { var cd = clouds[q]; cd.g.position.x += cd.sp * dt; if (cd.g.position.x > 100) cd.g.position.x = -100; }
+        for (var tk = 0; tk < ticks.length; tk++) ticks[tk](t, dt);
+      }
+      for (var r = 0; r < routes.length; r++) {
+        var ro = routes[r], on = !!sel && (ro.a === sel || ro.b === sel);
+        var u = reduce ? 0.5 : (t * ro.sp + ro.off) % 1;
+        ro.ship.position.copy(ro.curve.getPoint(u)); ro.ship.position.y = 0.05 + Math.sin(t * 1.6 + r) * 0.05;
+        var tg = ro.curve.getTangent(u); ro.ship.rotation.y = -Math.atan2(tg.z, tg.x);
+        var sc = on ? 0.95 : 0.62; ro.ship.scale.setScalar(ro.ship.scale.x + (sc - ro.ship.scale.x) * 0.15);
+        for (var d = 0; d < ro.dots.length; d++) { ro.dots[d].material = on ? dotOn : dotOff; var ds = on ? 1.25 : 0.8; ro.dots[d].scale.setScalar(ds); }
+      }
+      renderer.render(scene, camera);
+      updateLabels();
+      if (first) { first = false; $('#loading').classList.add('gone'); }
+    }
+    frame();
+    return { focus: focus, home: home };
+  }
+
+  try {
+    if (!window.THREE) throw new Error('three missing');
+    world = buildWorld();
+  } catch (err) {
+    console.error(err);
+    $('#loading').classList.add('gone');
+    $('#nogl').style.display = 'block';
+    document.querySelectorAll('.lab').forEach(function (l) { l.style.display = 'none'; });
+    $('#gl').style.display = 'none';
+  }
+  refreshLabels();
+})();
+</script>
+</body>
+</html>
