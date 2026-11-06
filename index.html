@@ -145,6 +145,8 @@ details.sec.hl .num { background: var(--gold); color: #2A2118; }
 .src { display: flex; flex-wrap: wrap; gap: 8px; }
 .src a { border: 2px solid var(--gold); border-radius: 999px; padding: 3px 14px; font-size: 13.5px; font-weight: 700; text-decoration: none; }
 .src a:hover { background: var(--gold); color: #2A2118; }
+.isle-tools { margin: 10px 0 4px; }
+.isle-tools > span { display: block; font-size: 12.5px; font-weight: 700; opacity: .75; margin-bottom: 6px; }
 .fine { margin: 14px 0 0; font-size: 12.5px; color: var(--ink-soft); }
 
 /* 彈窗：導覽、清單、比較 */
@@ -250,7 +252,8 @@ td .n { display: block; color: var(--ink-soft); font-size: 12.5px; line-height: 
       risk: '股價每天波動，個股可能大幅下跌甚至下市；押單一公司時，集中風險最高。',
       tw: ['在證券商開戶，透過證券交易所或櫃買中心的市場下單。', '想分散風險，可以看追蹤指數的 ETF，不必只選個股。', '台股現股有每日漲跌幅限制，實際幅度與交易規則請查證交所公告。'],
       ask: ['這筆錢三年內會用到嗎？', '單一標的跌一半，我撐得住嗎？'],
-      src: [['臺灣證券交易所', 'https://www.twse.com.tw/zh/'], ['公開資訊觀測站', 'https://mops.twse.com.tw/'], ['證券櫃檯買賣中心', 'https://www.tpex.org.tw/']] },
+      src: [['臺灣證券交易所', 'https://www.twse.com.tw/zh/'], ['公開資訊觀測站', 'https://mops.twse.com.tw/'], ['證券櫃檯買賣中心', 'https://www.tpex.org.tw/']],
+      tools: [['融資與大盤', 'https://script.google.com/macros/s/AKfycbz21CxtRtyIk-xdkFLhIP4LnjQC6Kll9DIpu6P8UxU5hivH3qQ_zgWCRGJQvYFhR5EvMQ/exec']] },
     { id: 'gold', no: '03', name: '黃金', title: '黃金寶閣島', code: 'BOT 牌價', pos: [0, 0], R: 4.9, dock: 1.45, ta: '#FFF0BF', tb: '#F5C84A',
       tag: '不生利息的實物型資產，常被當作避險選項討論。',
       what: '黃金不會配息，收益只來自價格變化。價格受國際供需、美元與利率環境等因素影響。',
@@ -354,7 +357,8 @@ td .n { display: block; color: var(--ink-soft); font-size: 12.5px; line-height: 
     var html = '<div class="sh-head">' + tile(a) + '<div><div class="kick">ISLAND ' + a.no + ' · ' + a.code + '</div><h2>' + a.title + '</h2></div></div>' +
       '<p class="lead">' + a.tag + '</p>' +
       '<blockquote class="q" style="margin-left:0">「' + CAP[a.id] + '」<small>—— 掌門一句話</small></blockquote>' +
-      '<div class="chips"><span class="chip">流動性 ' + cr[1][1] + '</span><span class="chip">槓桿 ' + cr[2][1] + '</span><span class="chip">6 個要點</span><span class="chip">' + rels.length + ' 條水路</span></div>';
+      '<div class="chips"><span class="chip">流動性 ' + cr[1][1] + '</span><span class="chip">槓桿 ' + cr[2][1] + '</span><span class="chip">6 個要點</span><span class="chip">' + rels.length + ' 條水路</span></div>' +
+      (a.tools ? '<div class="isle-tools"><span>島上工具</span><div class="src">' + a.tools.map(function (s) { return '<a href="' + s[1] + '" target="_blank" rel="noopener">' + s[0] + ' ↗</a>'; }).join('') + '</div></div>' : '');
     bodies.forEach(function (b, i) {
       html += '<details class="sec' + (i === openIdx ? ' hl' : '') + '" id="sec' + i + '"' + (i === openIdx ? ' open' : '') + '><summary><span class="num">' + (i + 1) + '</span>' + SECT[i] + '</summary><div class="body">' + b + '</div></details>';
     });
