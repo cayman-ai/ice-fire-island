@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EPS 速查・選股 | 股票島</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=Noto+Sans+TC:wght@400;500;700&display=swap">
+<style>
+/* 字級上限 10pt（≈13.3px）：標題 13px、內文 12px、註記 11px */
+:root{--bg:#EAF6EE;--sheet:#FFFBF2;--sheet2:#FFEFCB;--ink:#2A2118;--soft:#6B5E50;--line:#E9DEC6;--gold:#E5A100;--gold2:#96630A;--chip:#F3EAD6;--btn:#1F1A14;--btnInk:#FFF9EC;--warn:#B34A1A;--good:#2E7D4F;
+--fb:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;--fm:"IBM Plex Mono",ui-monospace,Menlo,monospace}
+@media (prefers-color-scheme:dark){:root{--bg:#17324A;--sheet:#1B2631;--sheet2:#2B3744;--ink:#F4ECDC;--soft:#B9AE9B;--line:#33414E;--gold:#F5B82E;--gold2:#F0C55A;--chip:#2A3744;--btn:#F4ECDC;--btnInk:#1B1610;--warn:#F3A57F;--good:#7FD3A2}}
+*{box-sizing:border-box}html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:12px/1.5 var(--fb)}
+.wrap{max-width:1180px;margin:0 auto;padding:10px 12px 14px}
+.top{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.brand{font-weight:700;font-size:13px;color:var(--gold2);background:var(--sheet);padding:5px 10px;border-radius:10px;text-decoration:none}
+.tabs{display:flex;gap:4px}
+.tabs button{font:inherit;font-weight:700;font-size:12px;padding:5px 12px;border-radius:999px;border:1px solid var(--line);background:var(--chip);color:var(--ink);cursor:pointer}
+.tabs button.on{background:var(--btn);color:var(--btnInk);border-color:var(--btn)}
+.asof{margin-left:auto;color:var(--soft);font-size:11px}
+input,select{font:inherit;color:var(--ink);background:var(--sheet);border:1px solid var(--line);border-radius:8px;padding:4px 8px}
+input:focus,select:focus{outline:2px solid var(--gold);outline-offset:0}
+.hide{display:none!important}
+/* 查個股 */
+.search{display:flex;gap:6px;margin:8px 0 6px}
+.search input{flex:1;max-width:360px;font-size:13px;padding:6px 10px}
+.co{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin:4px 2px 6px}
+.co b{font-size:13px}.co .code{font-family:var(--fm);color:var(--soft)}
+.tag{font-size:11px;padding:0 6px;border-radius:5px;background:var(--sheet2);color:var(--gold2);font-weight:700}
+.warn{color:var(--warn);font-size:11px}
+.co .px{margin-left:auto;color:var(--soft);font-size:11px}.co .px b{font-family:var(--fm);color:var(--ink);font-size:13px}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+@media(max-width:860px){.grid{grid-template-columns:repeat(2,1fr)}}
+.card{background:var(--sheet);border-radius:10px;padding:8px 10px;border-top:3px solid var(--gold)}
+.card h3{margin:0;font-size:12px;color:var(--soft);font-weight:500}
+.big{font-family:var(--fm);font-weight:600;font-size:13px;margin:2px 0}
+.big .u{font-family:var(--fb);font-weight:400;color:var(--soft);font-size:11px;margin-left:2px}
+.sub{font-size:11px;color:var(--soft)}
+.duo{display:flex;gap:10px}
+.mini{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin-top:8px}
+@media(max-width:860px){.mini{grid-template-columns:repeat(3,1fr)}}
+.mini div{background:var(--sheet);border-radius:8px;padding:5px 8px}
+.mini span{display:block;font-size:11px;color:var(--soft)}.mini b{font-family:var(--fm);font-size:12px}
+details{margin-top:4px;border-top:1px dashed var(--line);padding-top:3px}
+summary{cursor:pointer;font-size:11px;font-weight:700;color:var(--gold2)}
+table{width:100%;border-collapse:collapse;font-size:11px}
+td,th{padding:2px 4px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+td:first-child,th:first-child{text-align:left}
+th{color:var(--soft);font-weight:500}
+.num{font-family:var(--fm)}
+.est{color:var(--warn)}
+.neg{color:var(--warn)}.pos{color:var(--good)}
+.note{font-size:11px;color:var(--soft);margin:3px 0 0}
+/* 選股 */
+.filters{background:var(--sheet);border-radius:10px;padding:8px 10px;margin-top:8px}
+.frow{display:flex;gap:6px;align-items:center;margin:3px 0;flex-wrap:wrap}
+.frow .k{min-width:190px}.frow .op{width:56px}.frow input{width:80px}
+.x{border:0;background:none;color:var(--soft);cursor:pointer;font-size:13px}
+.btns{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;align-items:center}
+.btns button{font:inherit;font-size:11px;padding:3px 10px;border-radius:999px;border:1px solid var(--line);background:var(--chip);color:var(--ink);cursor:pointer}
+.btns button.main{background:var(--btn);color:var(--btnInk);border-color:var(--btn);font-weight:700}
+.chk{font-size:11px;color:var(--soft);display:inline-flex;gap:3px;align-items:center;margin-right:8px}
+.res{margin-top:8px;background:var(--sheet);border-radius:10px;padding:6px 8px}
+.res .head{display:flex;gap:8px;align-items:center;font-size:11px;color:var(--soft);margin-bottom:4px}
+.tbl{max-height:calc(100vh - 290px);min-height:200px;overflow:auto}
+.tbl th{position:sticky;top:0;background:var(--sheet);cursor:pointer;user-select:none}
+.tbl th.s::after{content:" ▾"}.tbl th.s.asc::after{content:" ▴"}
+.tbl tr:hover td{background:var(--chip)}
+.tbl a{color:var(--gold2);cursor:pointer;text-decoration:none;font-weight:700}
+.foot{margin-top:6px;font-size:11px;color:var(--soft)}
+.msg{padding:20px;text-align:center;color:var(--soft)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <a class="brand" href="./">← 冰火島・股票島</a>
+    <div class="tabs"><button id="t1" class="on">查個股</button><button id="t2">選股篩選</button></div>
+    <span class="asof" id="asof">資料載入中…</span>
+  </div>
+
+  <section id="p1">
+    <form class="search" id="f" autocomplete="off">
+      <input id="q" list="dl" placeholder="輸入代碼或名稱，例如 2330 或 台積電" aria-label="股票代碼或公司名稱">
+      <datalist id="dl"></datalist>
+    </form>
+    <div id="one"></div>
+  </section>
+
+  <section id="p2" class="hide">
+    <div class="filters">
+      <div id="rows"></div>
+      <div class="btns">
+        <button id="add">＋ 加條件</button>
+        <span style="font-size:11px;color:var(--soft)">常用：</span>
+        <button data-p="growth">高成長</button><button data-p="yield">高殖利率</button><button data-p="value">便宜好公司</button><button data-p="cash">現金流穩健</button>
+        <button id="clr">清除</button>
+      </div>
+      <div class="btns">
+        <label class="chk"><input type="checkbox" id="exInd" checked>排除營建、金融</label>
+        <label class="chk"><input type="checkbox" id="exLoss" checked>排除虧損</label>
+        <label class="chk"><input type="checkbox" id="exRev" checked>排除累計營收衰退</label>
+        <label class="chk"><input type="checkbox" id="exLow">排除可信度低</label>
+      </div>
+    </div>
+    <div class="res">
+      <div class="head"><span id="cnt"></span><span>點欄名排序、點名稱看個股</span></div>
+      <div class="tbl"><table id="tb"></table></div>
+    </div>
+  </section>
+  <div class="foot">資料來源：公開資訊觀測站、臺灣證券交易所、證券櫃檯買賣中心，每個交易日 18:30 後更新。預估僅供參考，不構成投資建議。</div>
+</div>
+<script>
+var DATA_URL = 'https://raw.githubusercontent.com/cayman-ai/tw-stock-data/main/data/site/stocks.json';
+var D, L = [], BY = {};
+function g(o, p) { return p.split('.').reduce(function (a, k) { return a == null ? null : a[k]; }, o); }
+function f(n, d) { return n == null || !isFinite(n) ? '—' : Number(n).toLocaleString('zh-TW', { minimumFractionDigits: d, maximumFractionDigits: d }); }
+function pc(n, d) { return n == null ? '—' : f(n * 100, d == null ? 1 : d) + '%'; }
+function cls(n) { return n == null ? '' : n < 0 ? 'neg' : ''; }
+function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+function store(k, v) { try { if (v === undefined) return JSON.parse(localStorage.getItem(k)); localStorage.setItem(k, JSON.stringify(v)); } catch (e) { return null; } }
+
+/* 選股指標：key、名稱、是否百分比、小數位 */
+var IND = [
+  ['eps.forecast', '預估 EPS（元）', 0, 2], ['eps.growth', 'EPS 成長率（去年 EPS ≥ 0.5 元）', 1], ['eps.last_year', '去年 EPS（元）', 0, 2],
+  ['roe_ttm', '近四季 ROE', 1], ['external_roe', '外部股東權益報酬率', 1, 2],
+  ['dividend.cash', '預估現金股利（元）', 0, 2], ['dividend.stock', '預估股票股利（元）', 0, 2], ['dividend.yield', '預估現金殖利率', 1, 2],
+  ['dividend.cash_ratio', '近 5 年平均配發率', 1, 0], ['quality.dividend_streak', '連續配息年數', 0, 0],
+  ['revenue.ytd_yoy', '累計營收年增率', 1], ['revenue.mom_yoy', '單月營收年增率', 1],
+  ['quality.gross_margin', '毛利率', 1], ['quality.operating_margin', '營益率', 1],
+  ['fpe', '預估本益比', 0, 1], ['pe', '本益比', 0, 1], ['pb', '股價淨值比', 0, 2],
+  ['fcf.per_share_ttm', '每股自由現金流（元）', 0, 2], ['fcf.yield', '自由現金流殖利率', 1, 2], ['fcf.positive_years_5y', '近 5 年自由現金流為正年數', 0, 0],
+  ['quality.cash_conversion', '盈餘含金量（倍）', 0, 2], ['quality.debt_ratio', '負債比', 1], ['price', '股價', 0, 2]
+];
+var INDM = {}; IND.forEach(function (x) { INDM[x[0]] = x; });
+var PRE = {
+  growth: [['revenue.ytd_yoy', '>', 20], ['eps.growth', '>', 20]],
+  yield: [['dividend.yield', '>', 5], ['quality.dividend_streak', '>=', 5]],
+  value: [['roe_ttm', '>', 15], ['fpe', '<', 15]],
+  cash: [['fcf.positive_years_5y', '>=', 4], ['quality.cash_conversion', '>', 1]]
+};
+
+fetch(DATA_URL, { cache: 'no-cache' }).then(function (r) { return r.json(); }).then(init).catch(function () {
+  if (window.__DATA__) init(window.__DATA__); else document.getElementById('one').innerHTML = '<div class="msg">資料載入失敗，請稍後重新整理。</div>';
+});
+
+function init(d) {
+  D = d; L = d.stocks.filter(function (s) { return !s.error; });
+  L.forEach(function (s) { BY[s.code] = s; s.fpe = s.price && s.eps && s.eps.forecast > 0 ? s.price / s.eps.forecast : null; });
+  var sd = d.sources_date;
+  document.getElementById('asof').textContent = '股價 ' + sd.price + '｜月營收 ' + sd.monthly_revenue + '｜財報 ' + sd.quarterly;
+  var dl = document.getElementById('dl');
+  dl.innerHTML = L.map(function (s) { return '<option value="' + s.code + ' ' + esc(s.name) + '">'; }).join('');
+  var h = (location.hash || '').slice(1);
+  if (/^\d{4}$/.test(h) && BY[h]) show(h); else if (h === 'screen') tab(2); else show(store('eps_last') || '2330');
+  var saved = store('eps_rows'); (saved && saved.length ? saved : PRE.growth).forEach(function (r) { addRow(r[0], r[1], r[2]); });
+  ['exInd', 'exLoss', 'exRev', 'exLow'].forEach(function (id) { var v = store('eps_' + id); if (v != null) document.getElementById(id).checked = v; });
+  run();
+}
+
+/* 分頁 */
+function tab(n) {
+  document.getElementById('t1').classList.toggle('on', n === 1); document.getElementById('t2').classList.toggle('on', n === 2);
+  document.getElementById('p1').classList.toggle('hide', n !== 1); document.getElementById('p2').classList.toggle('hide', n !== 2);
+}
+document.getElementById('t1').onclick = function () { tab(1); };
+document.getElementById('t2').onclick = function () { tab(2); run(); };
+
+/* 查個股 */
+function find(v) {
+  v = (v || '').trim(); if (!v) return null;
+  var c = v.split(/\s+/)[0]; if (BY[c]) return BY[c];
+  return L.find(function (s) { return s.name === v; }) || L.find(function (s) { return s.name.indexOf(v) >= 0 || s.code.indexOf(v) === 0; });
+}
+var q = document.getElementById('q');
+document.getElementById('f').onsubmit = function (e) { e.preventDefault(); var s = find(q.value); if (s) show(s.code); else document.getElementById('one').innerHTML = '<div class="msg">找不到「' + esc(q.value) + '」</div>'; };
+q.addEventListener('input', function () { var s = BY[q.value.split(/\s+/)[0]]; if (s && q.value.indexOf(' ') > 0) show(s.code); });
+
+function show(code) {
+  var s = BY[code]; if (!s) return; tab(1); store('eps_last', code);
+  try { history.replaceState(null, '', '#' + code); } catch (e) {}
+  q.value = s.code + ' ' + s.name;
+  var e = s.eps || {}, dv = s.dividend || {}, rv = s.revenue || {}, fc = s.fcf || {}, qa = s.quality || {}, fl = s.flags || {};
+  var Y = e.target_year;
+  var warn = [];
+  if (fl.excluded_industry) warn.push('營建／金融業：EPS 推估模型不適用，僅供參考');
+  if (fl.low_confidence) warn.push('可信度低：' + (fl.low_confidence_reasons || []).join('、'));
+  var pubSum = (e.published || []).reduce(function (a, x) { return a + (x.eps || 0); }, 0);
+  var estSum = (e.estimated || []).reduce(function (a, x) { return a + (x.eps || 0); }, 0);
+  var epsRows = (e.published || []).map(function (x) { return '<tr><td>Q' + x.q + '</td><td>已公布</td><td class="num">' + f(x.eps, 2) + '</td></tr>'; }).join('') +
+    (e.estimated || []).map(function (x) { return '<tr class="est"><td>Q' + x.q + '</td><td>推估（' + x.actual_months + ' 個月實際營收）</td><td class="num">' + f(x.eps, 2) + '</td></tr>'; }).join('');
+  var divRows = (dv.history || []).map(function (h) { return '<tr><td>' + h.y + '</td><td class="num">' + f(h.eps, 2) + '</td><td class="num">' + f(h.cash, 2) + '</td><td class="num">' + (h.eps > 0 && h.cash != null ? pc(h.cash / h.eps, 0) : '—') + '</td><td class="num">' + f(h.stock, 2) + '</td><td>' + h.status + '</td></tr>'; }).join('');
+  var html = '<div class="co"><b>' + esc(s.name) + '</b><span class="code">' + s.code + '</span><span class="tag">' + s.market + '</span><span class="tag">' + esc(s.industry) + '</span>' +
+    (e.size_tier ? '<span class="tag">' + e.size_tier + '</span>' : '') +
+    '<span class="px">股價 <b>' + f(s.price, 2) + '</b>　本益比 ' + f(s.pe, 1) + '　淨值比 ' + f(s.pb, 2) + '</span></div>' +
+    (warn.length ? '<div class="warn">⚠ ' + warn.join('；') + '</div>' : '') +
+    '<div class="grid">' +
+    '<div class="card"><h3>' + Y + ' 預估 EPS</h3><div class="big">' + f(e.forecast, 2) + '<span class="u">元</span></div>' +
+    '<div class="sub">' + (e.range ? '區間 ' + f(e.range[0], 2) + '～' + f(e.range[1], 2) + '　' : '') + '去年 ' + f(e.last_year, 2) + '（' + (e.growth == null ? '—' : (e.growth >= 0 ? '+' : '') + pc(e.growth)) + '）</div>' +
+    (e.note ? '<div class="note">無法預估：' + esc(e.note) + '</div>' : '') +
+    '<details><summary>怎麼算</summary><table><tr><th>季</th><th></th><th>EPS</th></tr>' + epsRows + '</table>' +
+    '<p class="note">已公布 ' + f(pubSum, 2) + ' ＋ 推估 ' + f(estSum, 2) + '。推估季 EPS ＝ 剩餘營收 × 近四季淨利率 ' + pc(e.margin_ttm) + (e.nonop_adjusted && Math.abs(e.margin_ttm - e.margin_ttm_raw) > 0.002 ? '（已扣除一次性業外，原始 ' + pc(e.margin_ttm_raw) + '）' : '') + ' ÷ 股數。全年營收以旺淡季係數 ' + f(e.seasonal_factor, 3) + '（' + (e.seasonal_years || 0) + ' 年）推估' +
+    (e.revenue_basis_ratio != null && Math.abs(e.revenue_basis_ratio - 1) > 0.02 ? '，並以財報／月營收比 ' + f(e.revenue_basis_ratio, 3) + ' 換算' : '') + '。區間依全市場回測誤差（±' + pc(e.range_pct, 0) + '）。</p></details></div>' +
+    '<div class="card"><h3>近四季 ROE</h3><div class="big">' + pc(s.roe_ttm) + '</div><div class="sub">截至 ' + (e.latest_quarter || '—') + '</div>' +
+    '<details><summary>怎麼算</summary><p class="note">近四季歸屬母公司淨利 ÷ 期初與期末權益平均。</p></details></div>' +
+    '<div class="card"><h3>預估股利（' + Y + ' 盈餘）</h3><div class="duo"><div><div class="big">' + f(dv.cash, 2) + '<span class="u">元現金</span></div></div><div><div class="big">' + f(dv.stock, 2) + '<span class="u">元股票</span></div></div></div>' +
+    '<div class="sub">殖利率 ' + pc(dv.yield, 2) + '　平均配發率 ' + pc(dv.cash_ratio, 0) + '（' + (dv.years_used || 0) + ' 年）</div>' +
+    '<details><summary>怎麼算</summary><table><tr><th>年度</th><th>EPS</th><th>現金</th><th>配發率</th><th>股票</th><th>狀態</th></tr>' + divRows + '</table>' +
+    '<p class="note">預估 EPS × 近 5 年平均配發率（EPS ≤ 0 及尚未配發的年度不列入）。</p></details></div>' +
+    '<div class="card"><h3>外部股東權益報酬率</h3><div class="big">' + pc(s.external_roe, 2) + '</div><div class="sub">預估 EPS ÷ 股價（＝預估本益比 ' + f(s.fpe, 1) + ' 倍的倒數）</div>' +
+    '<details><summary>說明</summary><p class="note">以現價買進，依今年預估獲利，每年約可賺回投入金額的比例。</p></details></div>' +
+    '</div>' +
+    '<div class="mini">' +
+    '<div><span>累計營收年增率</span><b class="' + cls(rv.ytd_yoy) + '">' + pc(rv.ytd_yoy) + '</b></div>' +
+    '<div><span>' + (rv.latest_month || '') + ' 單月年增率</span><b class="' + cls(rv.mom_yoy) + '">' + pc(rv.mom_yoy) + '</b></div>' +
+    '<div><span>毛利率／營益率</span><b>' + pc(qa.gross_margin) + '／' + pc(qa.operating_margin) + '</b></div>' +
+    '<div><span>每股自由現金流</span><b class="' + cls(fc.per_share_ttm) + '">' + f(fc.per_share_ttm, 2) + '</b></div>' +
+    '<div><span>近 5 年自由現金流為正</span><b>' + (fc.positive_years_5y == null ? '—' : fc.positive_years_5y + ' 年') + '</b></div>' +
+    '<div><span>盈餘含金量／負債比</span><b>' + f(qa.cash_conversion, 2) + '／' + pc(qa.debt_ratio, 0) + '</b></div>' +
+    '</div>' + (fc.note ? '<div class="note">自由現金流：' + esc(fc.note) + '</div>' : '');
+  document.getElementById('one').innerHTML = html;
+}
+
+/* 選股篩選 */
+var rowsEl = document.getElementById('rows');
+function addRow(k, op, v) {
+  var d = document.createElement('div'); d.className = 'frow';
+  d.innerHTML = '<select class="k">' + IND.map(function (x) { return '<option value="' + x[0] + '">' + x[1] + (x[2] ? '（%）' : '') + '</option>'; }).join('') + '</select>' +
+    '<select class="op"><option>&gt;</option><option>&gt;=</option><option>&lt;</option><option>&lt;=</option></select><input class="v" type="number" step="any"><button class="x" title="刪除">✕</button>';
+  rowsEl.appendChild(d);
+  d.querySelector('.k').value = k || 'eps.growth'; d.querySelector('.op').value = op || '>'; d.querySelector('.v').value = v == null ? '' : v;
+  d.querySelector('.x').onclick = function () { d.remove(); run(); };
+  d.querySelectorAll('select,input').forEach(function (el) { el.addEventListener('change', run); el.addEventListener('input', run); });
+}
+document.getElementById('add').onclick = function () { addRow(); run(); };
+document.getElementById('clr').onclick = function () { rowsEl.innerHTML = ''; run(); };
+document.querySelectorAll('[data-p]').forEach(function (b) { b.onclick = function () { rowsEl.innerHTML = ''; PRE[b.dataset.p].forEach(function (r) { addRow(r[0], r[1], r[2]); }); run(); }; });
+['exInd', 'exLoss', 'exRev', 'exLow'].forEach(function (id) { document.getElementById(id).addEventListener('change', function () { store('eps_' + id, this.checked); run(); }); });
+
+var SORT = { k: 'eps.growth', asc: false };
+function conds() {
+  return [].map.call(rowsEl.children, function (d) { return [d.querySelector('.k').value, d.querySelector('.op').value, d.querySelector('.v').value]; });
+}
+function run() {
+  if (!D) return;
+  var cs = conds(); store('eps_rows', cs);
+  var ex = { ind: document.getElementById('exInd').checked, loss: document.getElementById('exLoss').checked, rev: document.getElementById('exRev').checked, low: document.getElementById('exLow').checked };
+  var act = cs.filter(function (c) { return c[2] !== '' && isFinite(+c[2]); });
+  var res = L.filter(function (s) {
+    var fl = s.flags || {};
+    if (ex.ind && fl.excluded_industry) return false;
+    if (ex.loss && fl.loss) return false;
+    if (ex.rev && fl.ytd_revenue_decline) return false;
+    if (ex.low && fl.low_confidence) return false;
+    return act.every(function (c) {
+      var v = g(s, c[0]); if (v == null) return false;
+      var t = +c[2] / (INDM[c[0]][2] ? 100 : 1);
+      return c[1] === '>' ? v > t : c[1] === '>=' ? v >= t : c[1] === '<' ? v < t : v <= t;
+    });
+  });
+  var cols = ['price', 'eps.forecast', 'eps.growth', 'roe_ttm', 'external_roe', 'dividend.yield', 'revenue.ytd_yoy'];
+  act.forEach(function (c) { if (cols.indexOf(c[0]) < 0) cols.push(c[0]); });
+  if (cols.indexOf(SORT.k) < 0) SORT.k = cols[1];
+  res.sort(function (a, b) { var x = g(a, SORT.k), y = g(b, SORT.k); if (x == null) return 1; if (y == null) return -1; return SORT.asc ? x - y : y - x; });
+  document.getElementById('cnt').textContent = '符合 ' + res.length + ' 家' + (res.length > 300 ? '（顯示前 300 家）' : '');
+  var short = { 'price': '股價', 'eps.forecast': '預估EPS', 'eps.growth': 'EPS成長', 'roe_ttm': 'ROE', 'external_roe': '外部ROE', 'dividend.yield': '殖利率', 'revenue.ytd_yoy': '累計營收YoY' };
+  var th = '<tr><th>代號 名稱</th>' + cols.map(function (k) { return '<th data-k="' + k + '" class="' + (SORT.k === k ? 's' + (SORT.asc ? ' asc' : '') : '') + '">' + (short[k] || INDM[k][1].replace(/（元）|（倍）/, '')) + '</th>'; }).join('') + '</tr>';
+  var tb = res.slice(0, 300).map(function (s) {
+    return '<tr><td><a data-c="' + s.code + '">' + s.code + ' ' + esc(s.name) + '</a>' + (s.flags && s.flags.low_confidence ? ' <span class="warn" title="' + esc((s.flags.low_confidence_reasons || []).join('、')) + '">*</span>' : '') + '</td>' +
+      cols.map(function (k) { var m = INDM[k] || [k, '', 0, 2], v = g(s, k); return '<td class="num ' + cls(v) + '">' + (m[2] ? pc(v, m[3] == null ? 1 : m[3]) : f(v, m[3] == null ? 2 : m[3])) + '</td>'; }).join('') + '</tr>';
+  }).join('');
+  var t = document.getElementById('tb'); t.innerHTML = th + tb;
+  t.querySelectorAll('th[data-k]').forEach(function (h) { h.onclick = function () { var k = h.dataset.k; SORT = { k: k, asc: SORT.k === k ? !SORT.asc : false }; run(); }; });
+  t.querySelectorAll('a[data-c]').forEach(function (a) { a.onclick = function () { show(a.dataset.c); }; });
+}
+</script>
+</body>
+</html>
