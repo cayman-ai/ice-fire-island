@@ -196,7 +196,9 @@ function show(code) {
   var divRows = (dv.history || []).map(function (h) { return '<tr><td>' + h.y + '</td><td class="num">' + f(h.eps, 2) + '</td><td class="num">' + f(h.cash, 2) + '</td><td class="num">' + (h.eps > 0 && h.cash != null ? pc(h.cash / h.eps, 0) : '—') + '</td><td class="num">' + f(h.stock, 2) + '</td><td>' + h.status + '</td></tr>'; }).join('');
   var html = '<div class="co"><b>' + esc(s.name) + '</b><span class="code">' + s.code + '</span><span class="tag">' + s.market + '</span><span class="tag">' + esc(s.industry) + '</span>' +
     (e.size_tier ? '<span class="tag">' + e.size_tier + '</span>' : '') +
-    '<span class="px">股價 <b>' + f(s.price, 2) + '</b>　本益比 ' + f(s.pe, 1) + '　淨值比 ' + f(s.pb, 2) + '</span></div>' +
+    '<span class="px">股價 <b>' + f(s.price, 2) + '</b>' + (D.sources_date && D.sources_date.price ? '（' + esc(D.sources_date.price.slice(5).replace('-', '/')) + ' 收盤）' : '') +
+    '　<span title="收盤價 ÷ 近四季 EPS 合計（證交所／櫃買中心公布，虧損時不計算）">本益比 ' + f(s.pe, 1) + '</span>' +
+    '　<span title="收盤價 ÷ 最近一期財報每股淨值（證交所／櫃買中心公布）">淨值比 ' + f(s.pb, 2) + '</span></span></div>' +
     (warn.length ? '<div class="warn">⚠ ' + warn.join('；') + '</div>' : '') +
     '<div class="grid">' +
     '<div class="card"><h3>' + Y + ' 預估 EPS</h3><div class="big">' + f(e.forecast, 2) + '<span class="u">元</span></div>' +
