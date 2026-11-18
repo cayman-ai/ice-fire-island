@@ -24,6 +24,7 @@ body{background:var(--bg);color:var(--ink);font:12px/1.5 var(--fb)}
 .how{font:inherit;font-size:11px;padding:3px 10px;border-radius:999px;border:1px solid var(--gold);background:var(--sheet);color:var(--gold2);cursor:pointer;font-weight:700}
 .howbox{background:var(--sheet);border-radius:10px;padding:6px 10px;margin-top:6px;font-size:11px;line-height:1.6;border-left:3px solid var(--gold)}
 .howbox ol{margin:0;padding-left:18px}.howbox b{color:var(--gold2)}
+.howbox p{margin:2px 0}.howbox ul{margin:2px 0;padding-left:18px}details.cc{margin-top:8px}
 input,select{font:inherit;color:var(--ink);background:var(--sheet);border:1px solid var(--line);border-radius:8px;padding:4px 8px}
 input:focus,select:focus{outline:2px solid var(--gold);outline-offset:0}
 .hide{display:none!important}
@@ -247,7 +248,15 @@ function show(code) {
     '<div><span>每股自由現金流</span><b class="' + cls(fc.per_share_ttm) + '">' + f(fc.per_share_ttm, 2) + '</b></div>' +
     '<div><span>近 5 年自由現金流為正</span><b>' + (fc.positive_years_5y == null ? '—' : fc.positive_years_5y + ' 年') + '</b></div>' +
     '<div><span>盈餘含金量／負債比</span><b>' + f(qa.cash_conversion, 2) + '／' + pc(qa.debt_ratio, 0) + '</b></div>' +
-    '</div>' + (fc.note ? '<div class="note">自由現金流：' + esc(fc.note) + '</div>' : '');
+    '</div>' + (fc.note ? '<div class="note">自由現金流：' + esc(fc.note) + '</div>' : '') +
+    '<details class="cc"><summary>盈餘含金量是什麼？</summary><div class="howbox">' +
+    '<p>公司帳面上賺的錢，有多少真的變成現金收進來。算法：<b>近四季營業現金流合計 ÷ 近四季稅後淨利合計</b>（倍）。</p>' +
+    '<ul><li><b>1 倍以上</b>：賺 1 元，至少收回 1 元現金，獲利紮實。</li>' +
+    '<li><b>低於 1 倍</b>：部分獲利還沒收到現金，可能卡在應收帳款（客戶還沒付錢）或庫存（貨還沒賣掉）。</li>' +
+    '<li><b>長期遠低於 1</b>（例如 0.5 以下）：要小心，帳面在賺、口袋沒錢，配股利或還債都會比較吃力。</li></ul>' +
+    '<p>例：A 公司淨利 10 億、營業現金流 12 億，含金量 1.2 倍，錢都收回來了；B 公司淨利 10 億、營業現金流 3 億，含金量 0.3 倍，還有 7 億掛在帳上。</p>' +
+    '<p>注意：只看一季容易失真，所以用近四季合計；公司虧損時沒有意義，顯示「—」；銀行、金控的現金流結構不同，不適用。</p>' +
+    '</div></details>';
   document.getElementById('one').innerHTML = html;
 }
 
