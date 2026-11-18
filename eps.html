@@ -177,7 +177,8 @@ function find(v) {
 }
 var q = document.getElementById('q');
 document.getElementById('f').onsubmit = function (e) { e.preventDefault(); var s = find(q.value); if (s) show(s.code); else document.getElementById('one').innerHTML = '<div class="msg">找不到「' + esc(q.value) + '」</div>'; };
-q.addEventListener('input', function () { var s = BY[q.value.split(/\s+/)[0]]; if (s && q.value.indexOf(' ') > 0) show(s.code); });
+// 只有從清單選到完整「代碼 名稱」才自動查詢；逐字刪除時不再把名稱補回去
+q.addEventListener('input', function () { var s = BY[q.value.split(/\s+/)[0]]; if (s && q.value === s.code + ' ' + s.name) show(s.code); });
 
 function show(code) {
   var s = BY[code]; if (!s) return; tab(1); store('eps_last', code);
