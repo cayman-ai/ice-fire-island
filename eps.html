@@ -21,6 +21,9 @@ body{background:var(--bg);color:var(--ink);font:12px/1.5 var(--fb)}
 .tabs button{font:inherit;font-weight:700;font-size:12px;padding:5px 12px;border-radius:999px;border:1px solid var(--line);background:var(--chip);color:var(--ink);cursor:pointer}
 .tabs button.on{background:var(--btn);color:var(--btnInk);border-color:var(--btn)}
 .asof{margin-left:auto;color:var(--soft);font-size:11px}
+.how{font:inherit;font-size:11px;padding:3px 10px;border-radius:999px;border:1px solid var(--gold);background:var(--sheet);color:var(--gold2);cursor:pointer;font-weight:700}
+.howbox{background:var(--sheet);border-radius:10px;padding:6px 10px;margin-top:6px;font-size:11px;line-height:1.6;border-left:3px solid var(--gold)}
+.howbox ol{margin:0;padding-left:18px}.howbox b{color:var(--gold2)}
 input,select{font:inherit;color:var(--ink);background:var(--sheet);border:1px solid var(--line);border-radius:8px;padding:4px 8px}
 input:focus,select:focus{outline:2px solid var(--gold);outline-offset:0}
 .hide{display:none!important}
@@ -79,7 +82,18 @@ th{color:var(--soft);font-weight:500}
   <div class="top">
     <a class="brand" href="./">← 冰火島・股票島</a>
     <div class="tabs"><button id="t1" class="on">查個股</button><button id="t2">選股篩選</button></div>
+    <button class="how" id="howBtn">怎麼預測？</button>
     <span class="asof" id="asof">資料載入中…</span>
+  </div>
+  <div class="howbox hide" id="howBox">
+    <ol>
+      <li><b>已公布的季度</b>：直接用公司財報的實際 EPS。</li>
+      <li><b>估全年營收</b>：用今年已公布的月營收，再依公司過去幾年「哪幾個月是旺季、淡季」的比例，推算全年。</li>
+      <li><b>估能賺幾成</b>：用近四季的淨利率；賣資產這類一次性的業外收入會先扣掉，避免把意外之財當成常態。</li>
+      <li><b>算出 EPS</b>：還沒公布的營收 × 淨利率 ÷ 股數，加上已公布的 EPS，就是全年預估。</li>
+      <li><b>預估區間</b>：依過去 2 年、1,600 多家公司的回測誤差決定。越接近年底越準（大型股 11 月底約 ±6%）；中小型股、獲利忽高忽低的公司誤差大，會標「可信度低」。</li>
+      <li><b>其他</b>：預估股利＝預估 EPS × 近 5 年平均配發率；外部股東權益報酬率＝預估 EPS ÷ 股價；自由現金流＝營業現金流 − 資本支出。營建、金融業獲利認列方式不同，不適用此模型。</li>
+    </ol>
   </div>
 
   <section id="p1">
@@ -161,6 +175,7 @@ function init(d) {
   run();
 }
 
+document.getElementById('howBtn').onclick = function () { document.getElementById('howBox').classList.toggle('hide'); };
 /* 分頁 */
 function tab(n) {
   document.getElementById('t1').classList.toggle('on', n === 1); document.getElementById('t2').classList.toggle('on', n === 2);
