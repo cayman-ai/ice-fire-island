@@ -49,6 +49,11 @@ input:focus,select:focus{outline:2px solid var(--gold);outline-offset:0}
 @media(max-width:860px){.mini{grid-template-columns:repeat(3,1fr)}}
 .mini div{background:var(--sheet);border-radius:8px;padding:5px 8px}
 .mini span{display:block;font-size:11px;color:var(--soft)}.mini b{font-family:var(--fm);font-size:12px}
+.clbox{background:var(--sheet);border-radius:10px;padding:7px 10px;margin-top:8px}
+.clbox>span{font-size:11px;color:var(--soft)}
+.clsig{font-size:12px;font-weight:700;margin:2px 0}.clsig.good{color:var(--good)}.clsig.warn{color:var(--warn)}.clsig.info{color:var(--gold2)}
+.clrows{display:flex;flex-wrap:wrap;gap:2px 16px;font-size:12px}.clrows div{white-space:nowrap}.clrows b{font-family:var(--fm)}
+.clrows .ar{font-family:var(--fm);font-weight:700}
 details{margin-top:4px;border-top:1px dashed var(--line);padding-top:3px}
 summary{cursor:pointer;font-size:11px;font-weight:700;color:var(--gold2)}
 table{width:100%;border-collapse:collapse;font-size:11px}
@@ -137,6 +142,33 @@ function g(o, p) { return p.split('.').reduce(function (a, k) { return a == null
 function f(n, d) { return n == null || !isFinite(n) ? '—' : Number(n).toLocaleString('zh-TW', { minimumFractionDigits: d, maximumFractionDigits: d }); }
 function pc(n, d) { return n == null ? '—' : f(n * 100, d == null ? 1 : d) + '%'; }
 function cls(n) { return n == null ? '' : n < 0 ? 'neg' : ''; }
+/* 合約負債（預收款）：依重要性 判讀→流動→營收→存貨→可撐月數→金額→非流動；金額單位千元 */
+function yi(v) { return v == null ? '—' : f(v / 1e5, Math.abs(v) < 1e6 ? 2 : 0) + ' 億'; }
+function ar(t, y) { var a = { up: '↑', down: '↓', flat: '→' }[t]; return a ? '<span class="ar">' + a + '</span> ' + (y == null ? (t === 'up' ? '新增' : '') : (y > 0 ? '+' : '') + pc(y, 0)) : '—'; }
+function clBox(c, qa) {
+  var head = '<div class="clbox"><span>合約負債（預收款）' + (c ? '・' + c.quarter : '') + '</span>';
+  if (!c) return head + '<div class="note">資產負債表資料尚未抓到</div>' + CLHELP + '</div>';
+  if (!c.listed) return head + '<div class="note">財報未單獨列示合約負債（金額不大或併入其他科目）</div>' + CLHELP + '</div>';
+  var sg = c.signal ? '<div class="clsig ' + c.signal.level + '">' + (c.signal.level === 'warn' ? '⚠ ' : c.signal.level === 'good' ? '✓ ' : '') + esc(c.signal.text) + '</div>'
+    : c.small ? '<div class="note">合約負債佔營收不到 1%，參考價值有限</div>' : '';
+  var t = c.trend || {};
+  var rows = [
+    '流動 ' + ar(t.current, c.current_yoy), '營收 ' + ar(t.revenue, c.revenue_yoy), '存貨 ' + ar(t.inventory, c.inventory_yoy),
+    c.months_of_revenue == null ? '' : '約可撐 <b>' + f(c.months_of_revenue, 1) + '</b> 個月營收',
+    '合計 <b>' + yi(c.total) + '</b>' + (c.noncurrent == null ? '' : '（流動 ' + yi(c.current) + '／非流動 ' + yi(c.noncurrent) + '）'),
+    c.noncurrent == null ? '' : '非流動 ' + ar(t.noncurrent, c.noncurrent_yoy),
+    qa && qa.debt_ratio_ex_cl != null ? '負債比 ' + pc(qa.debt_ratio, 0) + '（扣除預收款 ' + pc(qa.debt_ratio_ex_cl, 0) + '）' : ''
+  ].filter(Boolean).map(function (x) { return '<div>' + x + '</div>'; }).join('');
+  return head + sg + '<div class="clrows">' + rows + '</div>' + CLHELP + '</div>';
+}
+var CLHELP = '<details><summary>合約負債是什麼？</summary><div class="howbox">' +
+  '<p>客戶已經先付錢，但公司還沒交貨或提供服務的金額，以前叫「預收款項」。這是好的負債：錢已經收進來，代表未來營收比較有把握。</p>' +
+  '<p><b>流動</b>：1 年內就會交貨、變成營收，對近期財報和股價的推升最直接。<b>非流動</b>：超過 1 年才會變成營收（例如大型建案、多年期軟體維護、長約設備）；成長若主要來自非流動，營收會分好幾年認列，短期業績不會立刻爆發。</p>' +
+  '<p>箭頭：和去年同季比，↑ 增加超過 10%、↓ 減少超過 10%、→ 變動在 ±10% 以內。</p>' +
+  '<ul><li><b>流動↑、營收↑</b>：訂單滿手，最好</li><li><b>流動↓、營收↑</b>：預收款轉成營收，正常</li>' +
+  '<li><b>流動↑、存貨↑，營收卻沒動</b>：可能出貨卡關，未必是好消息</li><li><b>流動↓、營收↓</b>：新訂單可能變少，要留意</li></ul>' +
+  '<p>注意：半導體設備、軟體訂閱、旅遊、教育這類先收錢的產業最有參考價值，佔營收不到 1% 時參考價值低。合約負債會把負債比拉高，所以另外顯示扣除預收款後的負債比。每季財報公布後更新。</p>' +
+  '</div></details>';
 function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
 function store(k, v) { try { if (v === undefined) return JSON.parse(localStorage.getItem(k)); localStorage.setItem(k, JSON.stringify(v)); } catch (e) { return null; } }
 
@@ -150,7 +182,8 @@ var IND = [
   ['quality.gross_margin', '毛利率', 1], ['quality.operating_margin', '營益率', 1],
   ['fpe', '預估本益比', 0, 1], ['pe', '本益比', 0, 1], ['pb', '股價淨值比', 0, 2],
   ['fcf.per_share_ttm', '每股自由現金流（元）', 0, 2], ['fcf.yield', '自由現金流殖利率', 1, 2], ['fcf.positive_years_5y', '近 5 年自由現金流為正年數', 0, 0],
-  ['quality.cash_conversion', '盈餘含金量（倍）', 0, 2], ['quality.debt_ratio', '負債比', 1], ['price', '股價', 0, 2]
+  ['quality.cash_conversion', '盈餘含金量（倍）', 0, 2], ['quality.debt_ratio', '負債比', 1], ['quality.debt_ratio_ex_cl', '負債比（扣除預收款）', 1],
+  ['contract.current_yoy', '合約負債（流動）年增率', 1], ['contract.months_of_revenue', '合約負債可撐營收月數', 0, 1], ['price', '股價', 0, 2]
 ];
 var INDM = {}; IND.forEach(function (x) { INDM[x[0]] = x; });
 var PRE = {
@@ -249,6 +282,7 @@ function show(code) {
     '<div><span>近 5 年自由現金流為正</span><b>' + (fc.positive_years_5y == null ? '—' : fc.positive_years_5y + ' 年') + '</b></div>' +
     '<div><span>盈餘含金量／負債比</span><b>' + f(qa.cash_conversion, 2) + '／' + pc(qa.debt_ratio, 0) + '</b></div>' +
     '</div>' + (fc.note ? '<div class="note">自由現金流：' + esc(fc.note) + '</div>' : '') +
+    clBox(s.contract, qa) +
     '<details class="cc"><summary>盈餘含金量是什麼？</summary><div class="howbox">' +
     '<p>公司帳面上賺的錢，有多少真的變成現金收進來。算法：<b>近四季營業現金流合計 ÷ 近四季稅後淨利合計</b>（倍）。</p>' +
     '<ul><li><b>1 倍以上</b>：賺 1 元，至少收回 1 元現金，獲利紮實。</li>' +
